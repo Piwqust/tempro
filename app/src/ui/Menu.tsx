@@ -50,7 +50,8 @@ export function Menu({ items, onPick, placeholder = t("Поиск…"), onCreate
   };
 
   return (
-    <div className="menu" onKeyDown={(e) => e.stopPropagation()}>
+    // period keys must not fire while typing a filter, but Escape has to reach the popover to close it
+    <div className="menu" onKeyDown={(e) => e.key !== "Escape" && e.stopPropagation()}>
       <label className="menu-search">
         <Search size={15} strokeWidth={1.75} />
         <input
