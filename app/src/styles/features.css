@@ -346,6 +346,7 @@
   background: var(--surface);
   box-shadow: var(--shadow-pop);
   animation: pop-in 120ms var(--ease-out);
+  transition: opacity 100ms var(--ease-out);
 }
 .ctx-item {
   display: grid;

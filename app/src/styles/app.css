@@ -490,9 +490,11 @@ input {
   z-index: 50;
   /* transform-origin comes inline: the trigger's centre */
   animation: pop-in 160ms var(--ease-out);
+  transition: opacity 100ms var(--ease-out);
 }
 .popover[data-instant] {
   animation: none;
+  transition: none;
 }
 @keyframes pop-in {
   from {

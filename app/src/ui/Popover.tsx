@@ -17,6 +17,11 @@ type Props = {
 export function Popover({ anchor, open, onClose, children, align, offset = 6, instant }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<{ x: number; y: number; up: boolean; ox: number } | null>(null);
+  // after closing it stays 100ms to fade out (quicker than the entry), showing what it showed:
+  // callers often clear the state its content was built from in the same click
+  const [shown, setShown] = useState(open);
+  const last = useRef(children);
+  if (open) last.current = children;
 
   useLayoutEffect(() => {
     if (!open || !anchor || !ref.current) return;
@@ -50,10 +55,12 @@ export function Popover({ anchor, open, onClose, children, align, offset = 6, in
   }, [open, anchor, onClose]);
 
   useEffect(() => {
-    if (!open) setPos(null);
+    if (open) return setShown(true);
+    const id = setTimeout(() => (setShown(false), setPos(null)), 100);
+    return () => clearTimeout(id);
   }, [open]);
 
-  if (!open) return null;
+  if (!open && !shown) return null;
   return createPortal(
     <div
       ref={ref}
@@ -64,12 +71,12 @@ export function Popover({ anchor, open, onClose, children, align, offset = 6, in
       style={{
         left: pos?.x ?? 0,
         ...(pos?.up ? { bottom: pos.y } : { top: pos?.y ?? 0 }),
-        opacity: pos ? 1 : 0,
+        opacity: pos && open ? 1 : 0,
         transformOrigin: pos ? `${pos.ox}px ${pos.up ? "100%" : "0"}` : undefined,
-        pointerEvents: pos ? undefined : "none",
+        pointerEvents: pos && open ? undefined : "none",
       }}
     >
-      {children}
+      {open ? children : last.current}
     </div>,
     document.body,
   );

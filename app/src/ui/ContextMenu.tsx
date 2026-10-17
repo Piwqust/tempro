@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { Copy, FolderOpen, Lock, Play, RefreshCw, Settings, CalendarDays } from "lucide-react";
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { useStore } from "../data/store";
 import { GRAN_KEY, GRAN_LABEL, GRANS, screenOf } from "../lib/period";
 import { t } from "../lib/i18n";
@@ -24,6 +24,18 @@ export function ContextMenu() {
   const [at, setAt] = useState<{ x: number; y: number; items: Item[] } | null>(null);
   const ref = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
+  // closing fades out in 100ms, quicker than the entry; input stops at once
+  const [leaving, setLeaving] = useState(false);
+  const timer = useRef(0);
+  const close = useCallback(() => {
+    if (timer.current) return;
+    setLeaving(true);
+    timer.current = window.setTimeout(() => {
+      timer.current = 0;
+      setLeaving(false);
+      setAt(null);
+    }, 100);
+  }, []);
 
   useEffect(() => {
     const onMenu = (e: MouseEvent) => {
@@ -47,6 +59,9 @@ export function ContextMenu() {
       items.push({ key: "refresh", icon: <RefreshCw size={14} />, label: t("Обновить данные"), run: () => void qc.invalidateQueries() });
       if (lock.status.set) items.push({ key: "lock", icon: <Lock size={14} />, label: t("Заблокировать"), hint: "Ctrl+L", run: () => void lock.lock() });
       items.push({ key: "settings", icon: <Settings size={14} />, label: t("Настройки"), run: () => go({ screen: "settings" }) });
+      clearTimeout(timer.current);
+      timer.current = 0;
+      setLeaving(false);
       setPos(null);
       setAt({ x: e.clientX, y: e.clientY, items });
     };
@@ -64,8 +79,7 @@ export function ContextMenu() {
   }, [at]);
 
   useEffect(() => {
-    if (!at) return;
-    const close = () => setAt(null);
+    if (!at || leaving) return;
     const onDown = (e: PointerEvent) => !ref.current?.contains(e.target as Node) && close();
     // capture phase: the arrows must move through the menu, not step the day behind it.
     // Any other key closes the menu and goes on, so the D W M Q Y T hints in it just work
@@ -95,12 +109,18 @@ export function ContextMenu() {
       window.removeEventListener("blur", close);
       window.removeEventListener("wheel", close);
     };
-  }, [at]);
+  }, [at, leaving, close]);
 
   if (!at) return null;
+  // grows out of the cursor, even when it was pushed back inside the window
+  const origin = pos ? `${at.x - pos.x}px ${at.y - pos.y}px` : undefined;
   return (
-    <div ref={ref} className="ctx" role="menu" // grows out of the cursor, even when it was pushed back inside the window
-      style={{ left: pos?.x ?? at.x, top: pos?.y ?? at.y, opacity: pos ? 1 : 0, transformOrigin: pos ? `${at.x - pos.x}px ${at.y - pos.y}px` : undefined }}>
+    <div
+      ref={ref}
+      className="ctx"
+      role="menu"
+      style={{ left: pos?.x ?? at.x, top: pos?.y ?? at.y, opacity: pos && !leaving ? 1 : 0, transformOrigin: origin, pointerEvents: leaving ? "none" : undefined }}
+    >
       {at.items.map((it, i) =>
         it === "sep" ? (
           <span key={`s${i}`} className="ctx-sep" />
@@ -111,7 +131,7 @@ export function ContextMenu() {
             role="menuitem"
             className="ctx-item"
             onClick={() => {
-              setAt(null);
+              close();
               it.run();
             }}
           >
