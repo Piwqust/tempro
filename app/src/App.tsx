@@ -36,7 +36,12 @@ function demoNav(): Partial<Nav> {
 
 export default function App() {
   const [nav, setNav] = useState<Nav>(() => ({ screen: "today", day: startOfDay(Date.now()), projectFilter: [], appFilter: [], ...demoNav() }));
-  const go = useCallback((patch: Partial<Nav>) => setNav((n) => ({ ...n, ...patch })), []);
+  // a screen opened from the keyboard shows up at once; only clicks get the short fade
+  const byKey = useRef(false);
+  const go = useCallback((patch: Partial<Nav>) => {
+    byKey.current = false;
+    setNav((n) => ({ ...n, ...patch }));
+  }, []);
   const ctx = useMemo(() => ({ nav, go }), [nav, go]);
   const lock = useLock();
   const { settings, loaded } = useSettings();
@@ -78,6 +83,7 @@ export default function App() {
       // by physical key: the same keys work on a Russian layout
       const phys = e.code.toLowerCase();
       const code = phys.startsWith("key") ? phys.slice(3) : "";
+      byKey.current = true;
       setNav((n) => {
         const g = granOf(n.screen);
         if (g && (key === "arrowleft" || phys === "bracketleft")) return { ...n, day: step(g, n.day, -1) };
@@ -105,7 +111,7 @@ export default function App() {
           <>
         <ContextMenu />
         <Sidebar />
-        <main className="main" key={nav.screen + (nav.projectId ?? "")}>
+        <main className="main" key={nav.screen + (nav.projectId ?? "")} data-instant={byKey.current || undefined}>
           {nav.screen === "today" && <Today />}
           {nav.screen === "week" && <Week />}
           {nav.screen === "month" && <Month />}

@@ -192,12 +192,15 @@ input {
   border-radius: var(--r-xl);
   box-shadow: 0 0 0 1px var(--line), 0 1px 3px rgba(0, 0, 0, 0.03);
   overflow: hidden;
-  animation: screen-in 260ms var(--ease-out);
+  /* navigation happens dozens of times a day: a short fade, no travel */
+  animation: screen-in 140ms var(--ease-out);
+}
+.main[data-instant] {
+  animation: none;
 }
 @keyframes screen-in {
   from {
     opacity: 0;
-    transform: translateY(4px);
   }
 }
 
