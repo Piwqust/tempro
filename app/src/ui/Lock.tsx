@@ -72,6 +72,17 @@ export function UnlockForm({ title, hint }: { title: string; hint: string }) {
   const input = useRef<HTMLInputElement>(null);
   useEffect(() => input.current?.focus(), [forgot]);
 
+  // a wrong password is felt before it is read: a short shake, like a head shaking no.
+  // WAAPI restarts cleanly on every new attempt; reduced motion keeps only the red field
+  const shake = () => {
+    const el = input.current;
+    if (!el || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    el.animate(
+      [{ transform: "translateX(0)" }, { transform: "translateX(-6px)" }, { transform: "translateX(5px)" }, { transform: "translateX(-3px)" }, { transform: "translateX(2px)" }, { transform: "translateX(0)" }],
+      { duration: 320, easing: "cubic-bezier(0.23, 1, 0.32, 1)" },
+    );
+  };
+
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     if (!pw || busy) return;
@@ -82,9 +93,12 @@ export function UnlockForm({ title, hint }: { title: string; hint: string }) {
       else if (!(await unlock(pw))) {
         setErr(t("Неверный пароль"));
         setPw("");
+        input.current?.focus();
+        shake();
       }
     } catch (x) {
       setErr(x instanceof Error ? x.message : String(x));
+      shake();
     } finally {
       setBusy(false);
     }
@@ -98,6 +112,7 @@ export function UnlockForm({ title, hint }: { title: string; hint: string }) {
       <input
         ref={input}
         className="field"
+        data-bad={err ? "" : undefined}
         type={forgot ? "text" : "password"}
         value={pw}
         onChange={(e) => setPw(e.target.value)}

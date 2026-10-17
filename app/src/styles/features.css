@@ -328,6 +328,10 @@
 .field[data-bad] {
   box-shadow: inset 0 0 0 1.5px #e5484d;
 }
+/* stays red while focused: the field that was wrong is the one being retyped */
+.field[data-bad]:focus {
+  box-shadow: inset 0 0 0 1.5px #e5484d, 0 0 0 4px rgba(229, 72, 77, 0.16);
+}
 
 /* ---------- right-click menu ---------- */
 .ctx {
