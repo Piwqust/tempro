@@ -37,11 +37,13 @@ function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void 
   return <button type="button" className="toggle" data-on={on || undefined} role="switch" aria-checked={on} onClick={() => onChange(!on)} />;
 }
 
-function Seg<T extends string>({ value, options, onChange }: { value: T; options: [T, string][]; onChange: (v: T) => void }) {
+// a handful of fixed choices reads better as segments than as the system's dropdown,
+// which looked foreign next to Tempro's own menus
+function Seg<T extends string | number>({ value, options, onChange }: { value: T; options: [T, string][]; onChange: (v: T) => void }) {
   return (
     <div className="segmented">
       {options.map(([v, l]) => (
-        <button key={v} type="button" data-on={value === v || undefined} onClick={() => onChange(v)}>
+        <button key={String(v)} type="button" data-on={value === v || undefined} onClick={() => onChange(v)}>
           {l}
         </button>
       ))}
@@ -150,18 +152,10 @@ export function Settings() {
             )}
           </Row>
           <Row label={t("Отошёл, если нет ввода")} hint={t("короче 5 минут — пауза, дольше — отсутствие")}>
-            <select value={settings.idleSeconds} onChange={(e) => set({ idleSeconds: Number(e.target.value) })}>
-              {[60, 120, 180, 300].map((v) => (
-                <option key={v} value={v}>{t("{n} мин", { n: v / 60 })}</option>
-              ))}
-            </select>
+            <Seg value={settings.idleSeconds} options={[60, 120, 180, 300].map((v) => [v, t("{n} мин", { n: v / 60 })])} onChange={(v) => set({ idleSeconds: v })} />
           </Row>
           <Row label={t("Спрашивать после отсутствия")} hint={t("что это было: встреча, звонок, перерыв")}>
-            <select value={settings.questionMinutes} onChange={(e) => set({ questionMinutes: Number(e.target.value) })}>
-              {[10, 15, 30, 60].map((v) => (
-                <option key={v} value={v}>{t("от {n} мин", { n: v })}</option>
-              ))}
-            </select>
+            <Seg value={settings.questionMinutes} options={[10, 15, 30, 60].map((v) => [v, t("{n} мин", { n: v })])} onChange={(v) => set({ questionMinutes: v })} />
           </Row>
           <Row label={t("Горячая клавиша «сейчас работаю над…»")} hint={t("например Ctrl+Alt+T")}>
             <input className="field" defaultValue={settings.hotkey} onBlur={(e) => e.target.value !== settings.hotkey && set({ hotkey: e.target.value })} />
@@ -217,19 +211,17 @@ export function Settings() {
           hint={t("База зашифрована, ключ лежит в диспетчере учётных данных Windows: скопированный файл без твоей учётной записи не откроется. Скрытие ниже срабатывает ещё до записи.")}
         >
           <Row label={t("Хранить подробности")} hint={t("старше — заголовки окон, адреса вкладок и текст с экрана стираются; проект, программа и минуты остаются")}>
-            <select value={settings.detailDays} onChange={(e) => set({ detailDays: Number(e.target.value) })}>
-              {[
+            <Seg
+              value={settings.detailDays}
+              options={[
                 [7, t("7 дней")],
                 [30, t("30 дней")],
                 [90, t("90 дней")],
                 [365, t("год")],
                 [0, t("всегда")],
-              ].map(([v, label]) => (
-                <option key={v} value={v}>
-                  {label}
-                </option>
-              ))}
-            </select>
+              ]}
+              onChange={(v) => set({ detailDays: v })}
+            />
           </Row>
           <Row label={t("Скрывать заголовки со словами")} hint={t("по одному на строку; заголовок станет «[скрыто]»")}>
             <textarea className="field" rows={3} defaultValue={settings.hideTitles.join("\n")} onBlur={(e) => set({ hideTitles: lines(e.target.value) })} />
@@ -247,11 +239,7 @@ export function Settings() {
             <textarea className="field" rows={3} defaultValue={settings.blindApps.join("\n")} onBlur={(e) => set({ blindApps: lines(e.target.value) })} />
           </Row>
           <Row label={t("Не чаще")} hint={t("одного снимка на программу")}>
-            <select value={settings.ocrMinutes} onChange={(e) => set({ ocrMinutes: Number(e.target.value) })}>
-              {[2, 5, 10, 20].map((v) => (
-                <option key={v} value={v}>{t("раз в {n} мин", { n: v })}</option>
-              ))}
-            </select>
+            <Seg value={settings.ocrMinutes} options={[2, 5, 10, 20].map((v) => [v, t("{n} мин", { n: v })])} onChange={(v) => set({ ocrMinutes: v })} />
           </Row>
           <Row label={t("Проверка")} hint={t("распознать активное окно сейчас (это окно Tempro)")}>
             <button type="button" className="btn btn-ghost-white" disabled={busy === "ocr"} onClick={() => run("ocr", async () => {
