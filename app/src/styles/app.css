@@ -1523,12 +1523,22 @@ input {
   color: var(--ink-3);
 }
 
+/* reduced motion keeps fades that explain a change and drops movement; a looping animation
+   squeezed to 1ms would replay every frame and flicker, so loops stop entirely */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     animation-duration: 1ms !important;
-    transition-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-property: opacity, color, background-color, border-color, box-shadow, filter !important;
+  }
+  .rec-dot,
+  .rec-dot::after,
+  .skeleton,
+  .skeleton::after,
+  .spin {
+    animation: none !important;
   }
 }
 
