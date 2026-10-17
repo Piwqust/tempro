@@ -1,0 +1,23 @@
+---
+import Base from '../layouts/Base.astro';
+import Button from '../components/Button.astro';
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+<Base title="Nothing recorded here" description="This address does not exist on the Tempro site. Go back to today.">
+  <section class="lost" aria-labelledby="lost-title">
+    <div class="lost__cell" aria-hidden="true">
+      <span class="lost__ruler"><span>08:00</span><span>12:00</span><span>16:00</span><span>20:00</span></span>
+      <span class="lost__track"></span>
+      <span class="lost__track lost__track--short"></span>
+      <span class="lost__away"></span>
+    </div>
+    <div class="lost__text">
+      <p class="lost__code" data-reveal="fade" data-intro>404</p>
+      <h1 id="lost-title" class="lost__title" data-split="lines" data-intro>Nothing was recorded at this&nbsp;address.</h1>
+      <p class="body">An empty day: no windows, no projects, not even a pause. The page you wanted is somewhere else.</p>
+      <div data-reveal="fade" data-intro data-delay="0.45">
+        <Button href={`${base}/`}>Go to today</Button>
+      </div>
+    </div>
+  </section>
+</Base>

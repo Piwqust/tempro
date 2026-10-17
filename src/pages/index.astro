@@ -1,0 +1,203 @@
+---
+import { Image } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import Button from '../components/Button.astro';
+import { site, periods, sorting, presence, summary, privacyFacts, install } from '../data/site';
+import { heroPresence, fmtClock } from '../lib/demo';
+import dayShot from '../assets/day.png';
+import yearShot from '../assets/year-dark.png';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const track = heroPresence();
+const T0 = 10 * 60, T1 = 23 * 60 + 30;
+const pct = (m: number) => ((Math.min(Math.max(m, T0), T1) - T0) / (T1 - T0)) * 100;
+const hours = [10, 12, 14, 16, 18, 20, 22];
+const firstOf = (k: string) => track.find((s) => s.k === k);
+---
+<Base>
+  <!-- HERO + STAGE: the grid of days, zooming out -->
+  <section class="stage" data-stage aria-labelledby="hero-title">
+    <div class="stage__pin">
+      <div class="stage__text">
+        <div class="chapter chapter--intro" data-chapter="0" data-name="Day">
+          <h1 id="hero-title" class="hero__title" data-split="lines" data-intro>What did you actually work on today?</h1>
+          <p class="hero__lede">
+            Tempro records your Windows computer by itself, works out the project behind every window and gives you the answer for a day, a week or a whole year.
+          </p>
+          <div class="hero__cta" data-reveal="fade" data-intro data-delay="0.5">
+            <Button href={site.download} external meta={`v${site.version}`}>Download for Windows</Button>
+            <p class="hero__note">{site.platform}. Free, open source, everything stays on your computer.</p>
+          </div>
+        </div>
+        <ol class="periods">
+          {periods.slice(1).map((p, i) => (
+            <li class="chapter" data-chapter={i + 1} data-name={p.name}>
+              <h2 class="chapter__title"><kbd class="chapter__key">{p.key}</kbd> {p.name}</h2>
+              <p class="chapter__text">{p.text}</p>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <figure class="stage__figure">
+        <div class="readout" aria-hidden="true">
+          <p class="readout__label"><span data-readout-period>Day</span><span class="readout__sep"></span><span data-readout-label>Yesterday</span></p>
+          <p class="readout__value"><span data-readout-value>7.4</span><span class="readout__unit">h of work</span></p>
+          <p class="readout__sub" data-readout-sub>10:16 to 23:13, mostly Tempro</p>
+        </div>
+        <div class="stage__canvas">
+          <canvas data-grid role="img" aria-label="A heat map of recorded days. It opens on one day with a track per project, and zooms out to the week, the month, three months and the year. Demo data."></canvas>
+        </div>
+        <figcaption class="stage__foot">
+          <div class="keys" role="group" aria-label="Period">
+            {periods.map((p, i) => (
+              <button class="key" type="button" data-period={i} aria-pressed={i === 0 ? 'true' : 'false'}>
+                <span class="key__cap" aria-hidden="true">{p.key}</span><span class="key__name">{p.name}</span>
+              </button>
+            ))}
+          </div>
+          <p class="stage__note">Demo data, made up in your browser. <span class="hide-touch">The app's keys D, W, M, Q and Y work here too.</span></p>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- SORTING: raw window events, and the project Tempro makes of them -->
+  <section class="sort section" aria-labelledby="sort-title">
+    <div class="sort__head">
+      <h2 id="sort-title" class="h2" data-split="lines">It sorts itself. You&nbsp;correct it once.</h2>
+      <p class="body" data-reveal="fade">
+        Projects come from Figma files, editor folders, tab addresses and chat names. When it gets one wrong, move that window to the right project: Tempro saves a rule and sorts your whole history again, back to the first day.
+      </p>
+    </div>
+    <div class="sort__table">
+      <p class="sort__cols" aria-hidden="true"><span>As recorded</span><span>As understood</span></p>
+      <ol class="sort__log" data-sort>
+        {sorting.map((r) => (
+          <li class="sort__row" data-corrected={'corrected' in r ? '' : undefined} style={`--p:${r.color}`}>
+            <span class="sort__raw">
+              <time>{r.time}</time>
+              <span class="sort__app">{r.app}</span>
+              <span class="sort__title">{r.title}</span>
+            </span>
+            <span class="sort__project">
+              {'corrected' in r && <span class="sort__none" aria-hidden="true">No project</span>}
+              <span class="sort__bar" aria-hidden="true"></span>
+              <span class="sort__name">{r.project}</span>
+              <span class="sort__by">by {r.by}</span>
+            </span>
+          </li>
+        ))}
+      </ol>
+      <p class="sort__rule" data-rule>
+        <span class="sort__rule-key">spring</span> <span aria-hidden="true">→</span> Kite Studio
+        <span class="sort__rule-note">A rule you made once. Every “Spring campaign” window, past and future, now lands here.</span>
+      </p>
+    </div>
+  </section>
+
+  <!-- PRESENCE: five states, on the same day as the hero -->
+  <section class="presence section" aria-labelledby="presence-title">
+    <div class="presence__head">
+      <h2 id="presence-title" class="h2" data-split="lines">Five states, not&nbsp;two.</h2>
+      <p class="body" data-reveal="fade">
+        Most trackers know active and idle. A 40 minute talk you watch is not time away, and neither is a call where you barely touch the mouse. This is one day, the same one as above.
+      </p>
+    </div>
+    <figure class="strip">
+      <div class="strip__ruler" aria-hidden="true">
+        {hours.map((h) => <span style={`left:${pct(h * 60)}%`}>{fmtClock(h * 60)}</span>)}
+      </div>
+      <div class="strip__track" data-reveal="record" role="img" aria-label="Presence from 10:16 to 23:13: work, a lunch away, a 15 minute gap, a call at 17:40, a video at 20:05, then games.">
+        {track.map((s) => (
+          <span class={`seg seg--${s.k}`} style={`left:${pct(s.s)}%;width:${pct(s.e) - pct(s.s)}%`}></span>
+        ))}
+      </div>
+      <figcaption>
+        <ul class="strip__legend">
+          {presence.map((p) => {
+            const at = firstOf(p.k);
+            return (
+              <li class={`legend legend--${p.k}`}>
+                <span class={`legend__swatch seg--${p.k}`} aria-hidden="true"></span>
+                <span class="legend__name">{p.name}</span>
+                {at && <span class="legend__at">first at {fmtClock(at.s)}</span>}
+                <span class="legend__text">{p.text}</span>
+              </li>
+            );
+          })}
+        </ul>
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- SUMMARY: a statement, written by the AI about the same day -->
+  <section class="summary section" aria-labelledby="summary-title">
+    <h2 id="summary-title" class="summary__label">
+      <span class="summary__spark" aria-hidden="true"></span> The summary, written for you
+    </h2>
+    <blockquote class="summary__quote">
+      <p data-split="lines">{summary.headline}</p>
+    </blockquote>
+    <dl class="summary__cols">
+      {summary.columns.map((col) => (
+        <div data-reveal="fade">
+          <dt>{col.label}</dt>
+          <dd>{col.text}</dd>
+        </div>
+      ))}
+    </dl>
+    <p class="summary__note">
+      Optional, and off until you turn it on. Claude, or a local model through Ollama, in English or Russian. Only window titles and minutes are sent.
+    </p>
+  </section>
+
+  <!-- THE APP: real screenshots -->
+  <section class="app section" aria-labelledby="app-title">
+    <h2 id="app-title" class="h2 app__title" data-split="lines">The app itself, in demo mode.</h2>
+    <figure class="app__a" data-reveal="clip">
+      <div class="shot"><Image src={dayShot} widths={[720, 1080, 1440]} sizes="(min-width: 768px) 66vw, 100vw" alt="Tempro's Day screen: hours of work, a summary by Claude, a question about 15 minutes away, and one timeline track per project." /></div>
+      <figcaption><b>Day.</b> Light theme, the default. Tracks per project, the presence stripe at the bottom.</figcaption>
+    </figure>
+    <figure class="app__b" data-reveal="clip" data-delay="0.15">
+      <div class="shot"><Image src={yearShot} widths={[600, 900, 1200]} sizes="(min-width: 768px) 42vw, 100vw" alt="Tempro's Year screen in the dark theme: 657 hours of work, a calendar heat map and stacked bars by month." /></div>
+      <figcaption><b>Year.</b> The dark theme follows Windows. Calendar, months by kind, projects and highlights.</figcaption>
+    </figure>
+  </section>
+
+  <!-- PRIVACY: facts, set like the app's numbers -->
+  <section class="facts section" aria-labelledby="facts-title">
+    <div class="facts__head">
+      <h2 id="facts-title" class="h2" data-split="lines">It sees everything, so it locks everything.</h2>
+      <p class="body" data-reveal="fade">
+        A password can close the log or the whole window, and it locks again when Windows does. Lose it, and the recovery key clears it.{' '}
+        <a class="link" href={`${base}/privacy/`}>What it records, in full</a>
+      </p>
+    </div>
+    <dl class="facts__list">
+      {privacyFacts.map((f) => (
+        <div class="fact" data-reveal="up">
+          <dt class="fact__value">{f.value}{f.unit && <span class="fact__unit">{f.unit}</span>}</dt>
+          <dd class="fact__label">{f.label}</dd>
+        </div>
+      ))}
+    </dl>
+  </section>
+
+  <!-- INSTALL: a real sequence -->
+  <section class="install section" aria-labelledby="install-title">
+    <h2 id="install-title" class="h2" data-split="lines">Install it once. Then forget&nbsp;it.</h2>
+    <ol class="install__steps">
+      {install.map((s, i) => (
+        <li class="step" data-reveal="up" data-delay={String(i * 0.08)}>
+          <span class="step__n" aria-hidden="true">{i + 1}</span>
+          <h3 class="step__title">{s.title}</h3>
+          <p class="step__text">{s.text}</p>
+        </li>
+      ))}
+    </ol>
+    <p class="install__aw">
+      <b>Coming from ActivityWatch?</b> Tempro finds its database and imports the whole history, categories included.
+    </p>
+  </section>
+</Base>

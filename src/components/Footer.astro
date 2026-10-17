@@ -1,0 +1,35 @@
+---
+import Mark from './Mark.astro';
+import Button from './Button.astro';
+import { site } from '../data/site';
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const year = new Date().getFullYear();
+---
+<footer class="footer">
+  <div class="footer__top">
+    <p class="footer__ask" data-split="lines">Your day is already happening.<br />Let it write itself down.</p>
+    <div class="footer__cta">
+      <Button href={site.download} variant="light" external meta={`v${site.version}`}>Download for Windows</Button>
+      <p class="footer__note">{site.platform} · free and open source · MIT</p>
+    </div>
+  </div>
+  <div class="footer__word" aria-hidden="true">
+    <Mark size={200} ink="#ececec" class="footer__mark" />
+    <span>tempro</span>
+  </div>
+  <div class="footer__bottom">
+    <nav aria-label="Footer">
+      <ul>
+        <li><a class="u-link" href={`${base}/`}>Home</a></li>
+        <li><a class="u-link" href={`${base}/privacy/`}>Privacy</a></li>
+        <li><a class="u-link" href={site.repo} rel="noopener">Source on GitHub</a></li>
+        <li><a class="u-link" href={site.docs} rel="noopener">Developer docs</a></li>
+        <li><a class="u-link" href={site.license} rel="noopener">MIT license</a></li>
+      </ul>
+    </nav>
+    <p class="footer__colophon">
+      Built on the idea of <a class="u-link" href={site.activitywatch} rel="noopener">ActivityWatch</a>, written from scratch in Rust and TypeScript.
+      Set in Inter and JetBrains Mono. © {year} Tempro.
+    </p>
+  </div>
+</footer>

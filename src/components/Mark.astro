@@ -1,0 +1,12 @@
+---
+// The brand mark: nine days, the last one is now. Opacities from brand/logo/mark.svg.
+interface Props { size?: number; class?: string; ink?: string }
+const { size = 28, class: cls, ink = 'currentColor' } = Astro.props;
+const cells = [0.22, 0.55, 1, 0.55, 1, 0.3, 1, 0.45];
+---
+<svg class:list={['mark', cls]} viewBox="0 0 64 64" width={size} height={size} aria-hidden="true">
+  {cells.map((o, i) => (
+    <rect x={7 + (i % 3) * 18} y={7 + Math.floor(i / 3) * 18} width="14" height="14" rx="4" fill={ink} opacity={o} />
+  ))}
+  <rect class="mark__now" data-now x="43" y="43" width="14" height="14" rx="4" fill="#FF5A1F" />
+</svg>

@@ -1,0 +1,93 @@
+---
+import Base from '../layouts/Base.astro';
+import Button from '../components/Button.astro';
+import { site } from '../data/site';
+
+// Everything below restates README.md (Privacy first, FAQ). Keep the two in step.
+const ledger = [
+  {
+    group: 'Recorded',
+    rows: [
+      ['Active window', 'The program and its title, through Windows events. Titles are what projects are made from.'],
+      ['Browser tabs', 'With the extension: the address without its query string, and whether a video plays. Private windows are ignored.'],
+      ['Claude Code sessions', 'Which folder an agent works in, so its time lands on the right project.'],
+      ['Audio and microphone', 'Only on or off: enough to tell a video or a call from time away.'],
+      ['Lock and sleep', 'When the computer is locked or asleep, so those hours never count.'],
+    ],
+  },
+  {
+    group: 'Counted, never kept',
+    rows: [
+      ['Keys', 'How many per minute. Never which ones, never what you typed.'],
+      ['Clicks and scrolls', 'How many per minute, to tell work from watching.'],
+    ],
+  },
+  {
+    group: 'Never',
+    rows: [
+      ['Screenshots', 'None. Screen text recognition exists for programs whose title never changes; it is off by default, and even then keeps only the text.'],
+      ['Query strings', 'Stripped from every address before it is stored.'],
+      ['The cloud', 'There is no account and no server of ours. The app listens on 127.0.0.1 only.'],
+    ],
+  },
+  {
+    group: 'Where it lives',
+    rows: [
+      ['Database', 'SQLCipher, AES-256. The key is kept in Windows Credential Manager and tied to your Windows account.'],
+      ['Password', 'Optional, for the log or the whole window. It locks again when the window hides or Windows locks.'],
+      ['Recovery key', 'Save it from Settings, Data in your password manager: it opens the database after a Windows reinstall and clears a forgotten password.'],
+      ['Retention', 'After 30 days (you choose) titles and addresses are wiped. Hours per project stay.'],
+      ['AI', 'Off by default. When on, it sends window titles and minutes to Claude, or keeps them on your computer with a local Ollama model.'],
+    ],
+  },
+];
+
+const faq = [
+  ['Do I need the AI?', 'No. Recording, sorting by rules, every report and the CSV export work without it. The AI names sessions, suggests projects for unsorted time and writes summaries.'],
+  ['Can I export my data?', 'Yes. CSV for Excel with sessions, hours by day and project, and rates, from the week, month, 3 month, year and project screens.'],
+  ['macOS or Linux?', 'Not at the moment: the sensors use Windows APIs directly. The engine and the interface are platform independent, so a port is possible.'],
+];
+---
+<Base title="Privacy" description="What Tempro records on your Windows computer, what it only counts, what it never keeps, and where the encrypted data lives.">
+  <article class="privacy">
+    <header class="privacy__head">
+      <p class="privacy__kicker" data-reveal="fade" data-intro>Privacy</p>
+      <h1 class="privacy__title" data-split="lines" data-intro>What Tempro records, and what it never&nbsp;does.</h1>
+      <p class="body privacy__lede">
+        A time tracker that works by itself has to watch everything you do at the computer. So the rules are strict and simple: as little as needed, encrypted, and only on your machine.
+      </p>
+    </header>
+
+    <div class="ledger">
+      {ledger.map((g) => (
+        <section class="ledger__group" aria-labelledby={`g-${g.group.replace(/\W+/g, '-').toLowerCase()}`}>
+          <h2 class="ledger__name" id={`g-${g.group.replace(/\W+/g, '-').toLowerCase()}`}>{g.group}</h2>
+          <dl class="ledger__rows">
+            {g.rows.map(([k, v]) => (
+              <div class="ledger__row" data-reveal="record">
+                <dt>{k}</dt>
+                <dd>{v}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      ))}
+    </div>
+
+    <section class="faq" aria-labelledby="faq-title">
+      <h2 id="faq-title" class="h2" data-split="lines">Questions people ask</h2>
+      <div class="faq__list">
+        {faq.map(([q, a]) => (
+          <details class="faq__item">
+            <summary><span>{q}</span><span class="faq__mark" aria-hidden="true"></span></summary>
+            <p>{a}</p>
+          </details>
+        ))}
+      </div>
+      <div class="privacy__cta">
+        <Button href={site.download} external meta={`v${site.version}`}>Download for Windows</Button>
+        <Button href={site.repo} variant="line" external>Read the source</Button>
+      </div>
+    </section>
+  </article>
+</Base>

@@ -1,0 +1,17 @@
+---
+// The one button: an ink fill records in from the left with the orange now-line on its edge.
+// The top layer repeats the label with inverted colours and is clipped in sync, so the text
+// never sits in the wrong colour mid-way. It is aria-hidden: the accessible name is the base label.
+interface Props { href: string; variant?: 'solid' | 'line' | 'light'; class?: string; external?: boolean; meta?: string }
+const { href, variant = 'solid', class: cls, external = false, meta } = Astro.props;
+const label = await Astro.slots.render('default');
+---
+<a
+  class:list={['btn', `btn--${variant}`, cls]}
+  href={href}
+  {...(external ? { rel: 'noopener' } : {})}
+>
+  <span class="btn__base"><span class="btn__dot" aria-hidden="true"></span><span set:html={label} />{meta && <span class="btn__meta">{meta}</span>}</span>
+  <span class="btn__top" aria-hidden="true"><span class="btn__dot"></span><span set:html={label} />{meta && <span class="btn__meta">{meta}</span>}</span>
+  <span class="btn__edge" aria-hidden="true"></span>
+</a>

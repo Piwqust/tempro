@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://tempro.angleford.co/sitemap-index.xml
