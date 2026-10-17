@@ -1012,8 +1012,9 @@ input {
 .session:hover {
   box-shadow: 0 0 0 1px var(--line-2), 0 1px 2px rgba(0, 0, 0, 0.04);
 }
+/* big cards need less scale than buttons, but 0.995 moved a 600px card by 1.5px: not felt */
 .session:active {
-  transform: scale(0.995);
+  transform: scale(0.985);
 }
 .session[data-selected] {
   box-shadow: var(--focus-ring);
@@ -1091,7 +1092,7 @@ input {
   filter: brightness(1.04);
 }
 .block:active {
-  transform: scale(0.995);
+  transform: scale(0.985);
 }
 .block[data-off] {
   opacity: 0.28;
@@ -1316,6 +1317,13 @@ input {
   opacity: 1;
   transform: none;
 }
+/* without a hovering pointer the button would never show up */
+@media (hover: none) {
+  .row-assign {
+    opacity: 1;
+    transform: none;
+  }
+}
 .row-dur {
   width: 64px;
   text-align: right;
@@ -1392,8 +1400,11 @@ input {
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
   transition: transform 140ms var(--ease-out);
 }
-.swatch:hover {
-  transform: scale(1.1);
+/* a tap on a touch screen leaves :hover stuck: motion on hover only for a real pointer */
+@media (hover: hover) and (pointer: fine) {
+  .swatch:hover {
+    transform: scale(1.1);
+  }
 }
 .swatch[data-on] {
   box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px var(--c);
