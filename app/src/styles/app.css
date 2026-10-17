@@ -245,14 +245,29 @@ input {
   border-radius: 50%;
   background: var(--ink-4);
 }
+/* the window lives for weeks: the pulse is a scaled ring on its own layer, not a box-shadow
+   repainted every frame */
 .rec[data-on] .rec-dot {
+  position: relative;
   background: var(--live);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--live) 18%, transparent);
-  animation: pulse 2.4s ease-in-out infinite;
+}
+.rec[data-on] .rec-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--live);
+  animation: pulse 2.4s var(--ease-out) infinite;
 }
 @keyframes pulse {
-  50% {
-    box-shadow: 0 0 0 5px color-mix(in srgb, var(--live) 6%, transparent);
+  from {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(2.6);
   }
 }
 .nav {
@@ -1482,10 +1497,20 @@ input {
   flex: 1;
 }
 .skeleton {
+  position: relative;
+  overflow: hidden;
   border-radius: var(--r-lg);
-  background: linear-gradient(90deg, var(--sunken), color-mix(in srgb, var(--sunken) 50%, var(--surface)), var(--sunken));
-  background-size: 200% 100%;
-  animation: shimmer 1.4s ease-in-out infinite;
+  background: var(--sunken);
+}
+/* a sweeping highlight moved by transform; constant motion runs linear */
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--surface) 45%, transparent), transparent);
+  transform: translateX(-100%);
+  animation: shimmer 1.4s linear infinite;
+  animation-delay: var(--d, 0ms);
 }
 .skeleton-tl {
   height: 240px;
@@ -1500,7 +1525,7 @@ input {
 }
 @keyframes shimmer {
   to {
-    background-position: -200% 0;
+    transform: translateX(100%);
   }
 }
 .error-card {

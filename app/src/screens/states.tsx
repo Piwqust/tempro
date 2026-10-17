@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { t } from "../lib/i18n";
 
 export function Loading() {
@@ -7,7 +8,7 @@ export function Loading() {
       <div className="split">
         <div className="split-list">
           {Array.from({ length: 5 }, (_, i) => (
-            <div key={i} className="skeleton skeleton-card" style={{ animationDelay: `${i * 80}ms` }} />
+            <div key={i} className="skeleton skeleton-card" style={{ "--d": `${i * 80}ms` } as CSSProperties} />
           ))}
         </div>
         <div className="split-stack">
