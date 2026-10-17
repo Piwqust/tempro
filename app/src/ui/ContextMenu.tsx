@@ -59,20 +59,39 @@ export function ContextMenu() {
     if (!at || !ref.current) return;
     const r = { width: ref.current.offsetWidth, height: ref.current.offsetHeight };
     setPos({ x: Math.max(6, Math.min(at.x, window.innerWidth - r.width - 6)), y: Math.max(6, Math.min(at.y, window.innerHeight - r.height - 6)) });
+    // focus the first item so the arrows work right away; after a mouse click it shows no ring
+    ref.current.querySelector<HTMLElement>(".ctx-item")?.focus();
   }, [at]);
 
   useEffect(() => {
     if (!at) return;
     const close = () => setAt(null);
     const onDown = (e: PointerEvent) => !ref.current?.contains(e.target as Node) && close();
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && close();
+    // capture phase: the arrows must move through the menu, not step the day behind it.
+    // Any other key closes the menu and goes on, so the D W M Q Y T hints in it just work
+    const onKey = (e: KeyboardEvent) => {
+      if (["Control", "Shift", "Alt", "Meta"].includes(e.key)) return;
+      const items = [...(ref.current?.querySelectorAll<HTMLElement>(".ctx-item") ?? [])];
+      const i = items.indexOf(document.activeElement as HTMLElement);
+      const to = e.key === "ArrowDown" ? (i + 1) % items.length : e.key === "ArrowUp" ? (i - 1 + items.length) % items.length : e.key === "Home" ? 0 : e.key === "End" ? items.length - 1 : -1;
+      if (to >= 0) {
+        e.preventDefault();
+        e.stopPropagation();
+        items[to]?.focus();
+      } else if (e.key === "Escape") {
+        // only the menu closes, the selected session behind it stays selected
+        e.preventDefault();
+        e.stopPropagation();
+        close();
+      } else if (e.key !== "Enter" && e.key !== " " && e.key !== "Tab") close();
+    };
     window.addEventListener("pointerdown", onDown, true);
-    window.addEventListener("keydown", onKey);
+    window.addEventListener("keydown", onKey, true);
     window.addEventListener("blur", close);
     window.addEventListener("wheel", close, { passive: true });
     return () => {
       window.removeEventListener("pointerdown", onDown, true);
-      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("keydown", onKey, true);
       window.removeEventListener("blur", close);
       window.removeEventListener("wheel", close);
     };
