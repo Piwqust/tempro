@@ -121,8 +121,9 @@ export const EN_B: Record<string, string> = {
   "нет активности": "no activity",
   "Разобрано": "Sorted",
   "всё по проектам": "all in projects",
+  "нечего разбирать": "nothing to sort yet",
   "Больше всего в работе": "Most worked on",
-  "рабочих проектов за этот день нет": "no work projects today",
+  "рабочих проектов за этот день нет": "no work projects this day",
   "≈ {n} ₽ по ставкам": "≈ {n} ₽ at your rates",
   "Чем занимался": "What you did",
 

@@ -45,15 +45,18 @@ export function Hero({ model, projects, day }: { model: Model; projects: Map<str
 
       <button type="button" className="ov-card ov-sorted" onClick={() => go({ screen: "unsorted" })} disabled={none < 60_000}>
         <span className="ov-label">{t("Разобрано")}</span>
+        {/* an empty day has nothing sorted and nothing left: "0% · all in projects" contradicted itself */}
         <span className="ov-num">
-          {sorted}
-          <small>%</small>
+          {model.active ? sorted : "—"}
+          {model.active > 0 && <small>%</small>}
         </span>
         <span className="ov-meter">
           <i style={{ width: `${sorted}%` }} />
         </span>
         <span className="ov-sub">
-          {none >= 60_000 ? (
+          {!model.active ? (
+            t("нечего разбирать")
+          ) : none >= 60_000 ? (
             <>
               {t("без проекта {d}", { d: dur(none) })} <ArrowRight size={13} />
             </>
