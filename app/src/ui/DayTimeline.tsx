@@ -1,5 +1,5 @@
 import { ChevronRight, Minus, Plus } from "lucide-react";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { appName } from "../engine/context";
 import { KIND_COLOR, KIND_LABEL, KINDS, kindOf } from "../engine/rules";
 import type { Model, Project, ProjectKind, Segment, Session, StateSpan } from "../engine/types";
@@ -127,6 +127,7 @@ function finishCtx(b: Block) {
 }
 
 type Hover = { t: number; x: number; y: number; block?: { b: Block; row: Row } };
+type HoverApi = { current: (h: Hover | null) => void };
 
 const top = (m: Map<string | null, number>) => [...m.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
 
@@ -134,7 +135,8 @@ export function DayTimeline({ model, projects, visible, selected, onSelect, titl
   const [now, setNow] = useState(Date.now());
   const [range, setRange] = useState<[number, number]>(() => fitRange(model, now));
   const [mode, setMode] = useState<"fit" | "day" | "custom">("fit");
-  const [hover, setHover] = useState<Hover | null>(null);
+  // the hover point lives in HoverLayer: a pointer move must not re-render every lane and block
+  const hoverApi = useRef<(h: Hover | null) => void>(() => {});
   const track = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(800);
 
@@ -342,7 +344,7 @@ export function DayTimeline({ model, projects, visible, selected, onSelect, titl
 
   const move = (e: React.PointerEvent, block?: { b: Block; row: Row }) => {
     const r = track.current!.getBoundingClientRect();
-    setHover({ t: timeAt(e.clientX), x: e.clientX - r.left, y: e.clientY - r.top, block });
+    hoverApi.current({ t: timeAt(e.clientX), x: e.clientX - r.left, y: e.clientY - r.top, block });
   };
 
   return (
@@ -428,7 +430,7 @@ export function DayTimeline({ model, projects, visible, selected, onSelect, titl
           className="dtl-track"
           ref={track}
           onPointerMove={(e) => move(e)}
-          onPointerLeave={() => setHover(null)}
+          onPointerLeave={() => hoverApi.current(null)}
           onClick={() => onSelect(null)}
         >
           <div className="dtl-ruler">
@@ -515,8 +517,10 @@ export function DayTimeline({ model, projects, visible, selected, onSelect, titl
               <span className="dtl-now-label">{clock(now)}</span>
             </div>
           )}
-          {hover && <div className="dtl-cursor" style={{ left: hover.x }} />}
-          {hover && (
+          <HoverLayer api={hoverApi}>
+            {(hover) => (
+              <>
+            <div className="dtl-cursor" style={{ transform: `translateX(${hover.x}px)` }} />
             <HoverCard
               hover={hover}
               width={width}
@@ -526,7 +530,9 @@ export function DayTimeline({ model, projects, visible, selected, onSelect, titl
               projects={projects}
               title={hover.block ? titles?.get(sessionAt((hover.block.b.start + hover.block.b.end) / 2, top(hover.block.b.by))?.id ?? "") : undefined}
             />
-          )}
+              </>
+            )}
+          </HoverLayer>
         </div>
       </div>
 
@@ -566,6 +572,15 @@ function Density({ v }: { v?: Float32Array }) {
   );
 }
 
+/** Holds the hover point, so moving the pointer redraws the card and the cursor line only. */
+function HoverLayer({ api, children }: { api: HoverApi; children: (h: Hover) => ReactNode }) {
+  const [hover, setHover] = useState<Hover | null>(null);
+  useLayoutEffect(() => {
+    api.current = setHover;
+  }, [api]);
+  return hover ? children(hover) : null;
+}
+
 function HoverCard({ hover, width, head, state, seg, projects, title }: {
   hover: Hover;
   width: number;
@@ -579,7 +594,8 @@ function HoverCard({ hover, width, head, state, seg, projects, title }: {
   const b = hover.block?.b;
   const left = Math.min(Math.max(8, hover.x + 14), width - 268);
   const flip = hover.x + 14 + 260 > width;
-  const style = { left: flip ? hover.x - 274 : left, top: Math.max(4, hover.y - 10) };
+  // transform, not left/top: following the pointer then skips layout
+  const style = { transform: `translate(${flip ? hover.x - 274 : left}px, ${Math.max(4, hover.y - 10)}px)` };
   if (b) {
     const apps = [...b.apps.entries()].sort((x, y) => y[1] - x[1]).slice(0, 3);
     const inside = head?.mixed ? [...b.by.entries()].filter(([id]) => id).sort((x, y) => y[1] - x[1]).slice(0, 4) : [];
