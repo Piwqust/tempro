@@ -57,7 +57,7 @@ export function ContextMenu() {
   // keep it inside the window
   useLayoutEffect(() => {
     if (!at || !ref.current) return;
-    const r = ref.current.getBoundingClientRect();
+    const r = { width: ref.current.offsetWidth, height: ref.current.offsetHeight };
     setPos({ x: Math.max(6, Math.min(at.x, window.innerWidth - r.width - 6)), y: Math.max(6, Math.min(at.y, window.innerHeight - r.height - 6)) });
   }, [at]);
 
@@ -80,7 +80,8 @@ export function ContextMenu() {
 
   if (!at) return null;
   return (
-    <div ref={ref} className="ctx" role="menu" style={{ left: pos?.x ?? at.x, top: pos?.y ?? at.y, opacity: pos ? 1 : 0 }}>
+    <div ref={ref} className="ctx" role="menu" // grows out of the cursor, even when it was pushed back inside the window
+      style={{ left: pos?.x ?? at.x, top: pos?.y ?? at.y, opacity: pos ? 1 : 0, transformOrigin: pos ? `${at.x - pos.x}px ${at.y - pos.y}px` : undefined }}>
       {at.items.map((it, i) =>
         it === "sep" ? (
           <span key={`s${i}`} className="ctx-sep" />

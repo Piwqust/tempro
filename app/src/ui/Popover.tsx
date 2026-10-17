@@ -6,24 +6,29 @@ type Props = {
   open: boolean;
   onClose: () => void;
   children: ReactNode;
+  /** omitted: follow the anchor, so a trigger on the right half opens leftwards instead of over the next card */
   align?: "start" | "end";
   offset?: number;
 };
 
 /** Fixed-position popover anchored to an element; flips up when there's no room below. */
-export function Popover({ anchor, open, onClose, children, align = "start", offset = 6 }: Props) {
+export function Popover({ anchor, open, onClose, children, align, offset = 6 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState<{ x: number; y: number; up: boolean } | null>(null);
+  const [pos, setPos] = useState<{ x: number; y: number; up: boolean; ox: number } | null>(null);
 
   useLayoutEffect(() => {
     if (!open || !anchor || !ref.current) return;
     const a = anchor.getBoundingClientRect();
-    const p = ref.current.getBoundingClientRect();
+    // offset sizes: the entry animation is already scaling the box
+    const p = { width: ref.current.offsetWidth, height: ref.current.offsetHeight };
     const up = a.bottom + offset + p.height > window.innerHeight - 8 && a.top - offset - p.height > 8;
-    let x = align === "end" ? a.right - p.width : a.left;
+    const end = (align ?? (a.left + a.width / 2 > window.innerWidth / 2 ? "end" : "start")) === "end";
+    let x = end ? a.right - p.width : a.left;
     x = Math.max(8, Math.min(x, window.innerWidth - p.width - 8));
+    // grow out of the trigger, wherever clamping put the box
+    const ox = Math.max(0, Math.min(p.width, a.left + a.width / 2 - x));
     // when opening upwards pin the bottom edge, so filtering the list doesn't detach it from the anchor
-    setPos({ x, y: up ? window.innerHeight - a.top + offset : a.bottom + offset, up });
+    setPos({ x, y: up ? window.innerHeight - a.top + offset : a.bottom + offset, up, ox });
   }, [open, anchor, align, offset]);
 
   useEffect(() => {
@@ -57,6 +62,7 @@ export function Popover({ anchor, open, onClose, children, align = "start", offs
         left: pos?.x ?? 0,
         ...(pos?.up ? { bottom: pos.y } : { top: pos?.y ?? 0 }),
         opacity: pos ? 1 : 0,
+        transformOrigin: pos ? `${pos.ox}px ${pos.up ? "100%" : "0"}` : undefined,
         pointerEvents: pos ? undefined : "none",
       }}
     >
