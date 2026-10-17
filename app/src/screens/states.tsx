@@ -1,3 +1,5 @@
+import { t } from "../lib/i18n";
+
 export function Loading() {
   return (
     <div className="loading" aria-busy>
@@ -19,9 +21,9 @@ export function Loading() {
 export function LoadError({ error }: { error: Error }) {
   return (
     <div className="error-card card">
-      <div className="error-title">Не получилось прочитать данные ActivityWatch</div>
+      <div className="error-title">{t("Не получилось прочитать данные ActivityWatch")}</div>
       <div className="error-text">{error.message}</div>
-      <div className="error-hint">Проверь, что ActivityWatch установлен и база лежит в %LOCALAPPDATA%\activitywatch.</div>
+      <div className="error-hint">{t("Проверь, что ActivityWatch установлен и база лежит в %LOCALAPPDATA%\\activitywatch.")}</div>
     </div>
   );
 }

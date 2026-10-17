@@ -3,6 +3,7 @@ import { Copy, FolderOpen, Lock, Play, RefreshCw, Settings, CalendarDays } from 
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { useStore } from "../data/store";
 import { GRAN_KEY, GRAN_LABEL, GRANS, screenOf } from "../lib/period";
+import { t } from "../lib/i18n";
 import { dayTitle, startOfDay } from "../lib/time";
 import { useNav } from "../nav";
 import { useLock } from "./Lock";
@@ -26,26 +27,26 @@ export function ContextMenu() {
 
   useEffect(() => {
     const onMenu = (e: MouseEvent) => {
-      const t = e.target as HTMLElement;
-      if (t.closest("input, textarea, [contenteditable]")) return;
+      const el = e.target as HTMLElement;
+      if (el.closest("input, textarea, [contenteditable]")) return;
       e.preventDefault();
       const items: Item[] = [];
       const text = window.getSelection()?.toString().trim();
-      if (text) items.push({ key: "copy", icon: <Copy size={14} />, label: "Копировать", hint: "Ctrl+C", run: () => void navigator.clipboard?.writeText(text) });
-      const pid = t.closest<HTMLElement>("[data-ctx-project]")?.dataset.ctxProject;
+      if (text) items.push({ key: "copy", icon: <Copy size={14} />, label: t("Копировать"), hint: "Ctrl+C", run: () => void navigator.clipboard?.writeText(text) });
+      const pid = el.closest<HTMLElement>("[data-ctx-project]")?.dataset.ctxProject;
       const p = pid ? projects.find((x) => x.id === pid) : undefined;
-      if (p) items.push({ key: "project", icon: <ProjectIcon project={p} size={16} />, label: <>Открыть «{p.name}»</>, run: () => go({ screen: "project", projectId: p.id }) });
-      const day = Number(t.closest<HTMLElement>("[data-ctx-day]")?.dataset.ctxDay);
-      if (day && day <= Date.now()) items.push({ key: "day", icon: <CalendarDays size={14} />, label: <>Открыть {dayTitle(day).replace(/^./, (c) => c.toLowerCase())}</>, run: () => go({ screen: "today", day: startOfDay(day) }) });
+      if (p) items.push({ key: "project", icon: <ProjectIcon project={p} size={16} />, label: t("Открыть «{name}»", { name: p.name }), run: () => go({ screen: "project", projectId: p.id }) });
+      const day = Number(el.closest<HTMLElement>("[data-ctx-day]")?.dataset.ctxDay);
+      if (day && day <= Date.now()) items.push({ key: "day", icon: <CalendarDays size={14} />, label: t("Открыть {day}", { day: dayTitle(day).replace(/^./, (c) => c.toLowerCase()) }), run: () => go({ screen: "today", day: startOfDay(day) }) });
       if (items.length) items.push("sep");
       for (const g of GRANS) items.push({ key: g, icon: GRAN_ICON[g](14), label: GRAN_LABEL[g], hint: GRAN_KEY[g].toUpperCase(), run: () => go({ screen: screenOf(g), projectFilter: [], appFilter: [] }) });
-      items.push({ key: "today", icon: <CalendarDays size={14} />, label: "К сегодня", hint: "T", run: () => go({ day: startOfDay(Date.now()) }) });
+      items.push({ key: "today", icon: <CalendarDays size={14} />, label: t("К сегодня"), hint: "T", run: () => go({ day: startOfDay(Date.now()) }) });
       items.push("sep");
-      items.push({ key: "focus", icon: <Play size={14} />, label: "Сейчас работаю над…", run: () => window.dispatchEvent(new Event("tempro:focus-picker")) });
-      items.push({ key: "projects", icon: <FolderOpen size={14} />, label: "Проекты", run: () => go({ screen: "projects" }) });
-      items.push({ key: "refresh", icon: <RefreshCw size={14} />, label: "Обновить данные", run: () => void qc.invalidateQueries() });
-      if (lock.status.set) items.push({ key: "lock", icon: <Lock size={14} />, label: "Заблокировать", hint: "Ctrl+L", run: () => void lock.lock() });
-      items.push({ key: "settings", icon: <Settings size={14} />, label: "Настройки", run: () => go({ screen: "settings" }) });
+      items.push({ key: "focus", icon: <Play size={14} />, label: t("Сейчас работаю над…"), run: () => window.dispatchEvent(new Event("tempro:focus-picker")) });
+      items.push({ key: "projects", icon: <FolderOpen size={14} />, label: t("Проекты"), run: () => go({ screen: "projects" }) });
+      items.push({ key: "refresh", icon: <RefreshCw size={14} />, label: t("Обновить данные"), run: () => void qc.invalidateQueries() });
+      if (lock.status.set) items.push({ key: "lock", icon: <Lock size={14} />, label: t("Заблокировать"), hint: "Ctrl+L", run: () => void lock.lock() });
+      items.push({ key: "settings", icon: <Settings size={14} />, label: t("Настройки"), run: () => go({ screen: "settings" }) });
       setPos(null);
       setAt({ x: e.clientX, y: e.clientY, items });
     };

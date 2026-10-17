@@ -30,7 +30,7 @@ export function ProjectIcon({ project, size = 18 }: { project: Project | undefin
   const Icon = ICON_COMPONENT[name];
   return (
     <span className="picon" style={{ width: size, height: size, "--c": project.color } as CSSProperties}>
-      <Icon size={Math.round(size * 0.62)} strokeWidth={2} />
+      <Icon size={Math.round(size * 0.62)} strokeWidth={2.25} />
     </span>
   );
 }

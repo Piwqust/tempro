@@ -1,0 +1,22 @@
+// English for the Russian strings in lib/, engine/rules.ts and App.tsx. Key: the exact Russian string.
+export const EN_CORE: Record<string, string> = {
+  мин: "min",
+  ч: "h",
+  День: "Day",
+  Неделя: "Week",
+  Месяц: "Month",
+  "3 месяца": "3 months",
+  Год: "Year",
+  Работа: "Work",
+  Досуг: "Leisure",
+  Личное: "Personal",
+  Служебное: "Utility",
+  Проект: "Project",
+  Начало: "Start",
+  Конец: "End",
+  Часы: "Hours",
+  Ставка: "Rate",
+  Сумма: "Amount",
+  "Чем занимался": "What you did",
+  "Без проекта": "No project",
+};

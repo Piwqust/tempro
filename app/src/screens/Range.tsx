@@ -8,8 +8,8 @@ import type { DaySum } from "../engine/summary";
 import type { Project, ProjectKind } from "../engine/types";
 import { saveCsv } from "../lib/csv";
 import { monthShort, period, periodTitle, previous, type Gran } from "../lib/period";
-import { plural } from "../lib/plural";
-import { addDays, addMonths, dayNum, dur, HOUR, monthGen, monthTitle, startOfDay, startOfMonth, startOfWeek, weekday } from "../lib/time";
+import { locale, num, pl, t } from "../lib/i18n";
+import { addDays, addMonths, dayMonth, dayNum, dur, HOUR, monthTitle, startOfDay, startOfMonth, startOfWeek, weekdayDate } from "../lib/time";
 import { useNav } from "../nav";
 import { Kinds } from "../ui/Overview";
 import { PeriodBar } from "../ui/PeriodBar";
@@ -22,7 +22,7 @@ type Totals = Map<string | null, number>;
 type Metric = "work" | "leisure" | "all";
 
 const WORKDAY_MS = 30 * 60_000;
-const METRIC_LABEL: Record<Metric, string> = { work: "Работа", leisure: "Досуг", all: "Всё время" };
+const METRIC_LABEL: Record<Metric, string> = { work: t("Работа"), leisure: t("Досуг"), all: t("Всё время") };
 const METRIC_COLOR: Record<Metric, string> = { work: KIND_COLOR.work, leisure: KIND_COLOR.leisure, all: "var(--ink)" };
 
 export function workByDay(days: DaySum[], projects: Map<string, Project>): Map<number, number> {
@@ -60,14 +60,14 @@ export function Range({ gran }: { gran: Gran }) {
   const past = days.filter((d) => d.day <= today);
   const recorded = past.filter((d) => d.active >= 5 * 60_000).length;
   const workDays = past.filter((d) => (workOf.get(d.day) ?? 0) >= WORKDAY_MS).length;
-  const than = gran === "year" ? (prev.partial ? "к тем же дням прошлого года" : "к прошлому году") : prev.partial ? "к тем же дням предыдущих 3 месяцев" : "к предыдущим 3 месяцам";
+  const than = gran === "year" ? (prev.partial ? t("к тем же дням прошлого года") : t("к прошлому году")) : prev.partial ? t("к тем же дням предыдущих 3 месяцев") : t("к предыдущим 3 месяцам");
   const name = gran === "year" ? "год" : "3 месяца";
 
   const csv = () => {
     const ids = [...totals.keys()].filter((id): id is string => !!id && projects.has(id));
-    const head = ["Дата", "За компьютером, ч", ...ids.map((id) => projects.get(id)!.name), "Без проекта"];
-    const h = (ms: number) => (ms / HOUR).toFixed(2).replace(".", ",");
-    const rows = past.map((d) => [new Date(d.day).toLocaleDateString("ru-RU"), h(d.active), ...ids.map((id) => h(d.byProject.get(id) ?? 0)), h(d.byProject.get(null) ?? 0)]);
+    const head = [t("Дата"), t("За компьютером, ч"), ...ids.map((id) => projects.get(id)!.name), t("Без проекта")];
+    const h = (ms: number) => num((ms / HOUR).toFixed(2));
+    const rows = past.map((d) => [new Date(d.day).toLocaleDateString(locale()), h(d.active), ...ids.map((id) => h(d.byProject.get(id) ?? 0)), h(d.byProject.get(null) ?? 0)]);
     saveCsv(`tempro-${gran}-${new Date(from).toISOString().slice(0, 7)}.csv`, [head, ...rows].map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(";")).join("\r\n"));
   };
 
@@ -77,7 +77,7 @@ export function Range({ gran }: { gran: Gran }) {
         gran={gran}
         right={
           !loading && (
-            <button type="button" className="btn btn-ghost-white" onClick={csv} title="Часы по дням и проектам">
+            <button type="button" className="btn btn-ghost-white" onClick={csv} title={t("Часы по дням и проектам")}>
               <Download size={15} /> CSV
             </button>
           )
@@ -93,47 +93,48 @@ export function Range({ gran }: { gran: Gran }) {
             {progress < 1 && (
               <div className="rg-progress">
                 <i style={{ width: `${progress * 100}%` }} />
-                <span>Считаю месяцы: {Math.round(progress * 100)}%</span>
+                <span>{t("Считаю месяцы: {pct}%", { pct: Math.round(progress * 100) })}</span>
               </div>
             )}
             <section className="ov mon-kpis">
               <div className="ov-card ov-main">
-                <span className="ov-label">Работа</span>
+                <span className="ov-label">{t("Работа")}</span>
                 <Num ms={work} />
-                <span className="ov-sub">{workDays ? `${workDays} ${plural(workDays, "рабочий день", "рабочих дня", "рабочих дней")} · в среднем ${dur(work / workDays)}` : "рабочих дней нет"}</span>
+                <span className="ov-sub">{workDays ? t("{n} {days} · в среднем {avg}", { n: workDays, days: pl(workDays, ["рабочий день", "рабочих дня", "рабочих дней"], ["working day", "working days"]), avg: dur(work / workDays) }) : t("рабочих дней нет")}</span>
                 <Delta now={work} before={prevKinds.get("work") ?? 0} than={than} />
               </div>
               <div className="ov-card">
-                <span className="ov-label">Досуг</span>
+                <span className="ov-label">{t("Досуг")}</span>
                 <Num ms={leisure} />
-                <span className="ov-sub">{active ? `${Math.round((leisure / active) * 100)}% времени за компьютером` : "—"}</span>
+                <span className="ov-sub">{active ? t("{pct}% времени за компьютером", { pct: Math.round((leisure / active) * 100) }) : "—"}</span>
                 <Delta now={leisure} before={prevKinds.get("leisure") ?? 0} than={than} invert />
               </div>
               <div className="ov-card">
-                <span className="ov-label">За компьютером</span>
+                <span className="ov-label">{t("За компьютером")}</span>
                 <Num ms={active} />
                 <span className="ov-sub">
-                  {recorded} {plural(recorded, "день", "дня", "дней")} с записью из {past.length}
-                  {recorded ? ` · ${dur(active / recorded)} в день` : ""}
+                  {recorded
+                    ? t("{n} {days} с записью из {total} · {avg} в день", { n: recorded, days: pl(recorded, ["день", "дня", "дней"], ["day", "days"]), total: past.length, avg: dur(active / recorded) })
+                    : t("{n} {days} с записью из {total}", { n: recorded, days: pl(recorded, ["день", "дня", "дней"], ["day", "days"]), total: past.length })}
                 </span>
               </div>
               <button type="button" className="ov-card ov-sorted" onClick={() => go({ screen: "unsorted" })} disabled={none < 60_000}>
-                <span className="ov-label">Без проекта</span>
+                <span className="ov-label">{t("Без проекта")}</span>
                 <Num ms={none} />
                 <span className="ov-sub">
                   {none >= 60_000 ? (
                     <>
-                      разобрать <ArrowRight size={13} />
+                      {t("разобрать")} <ArrowRight size={13} />
                     </>
                   ) : (
-                    "всё разобрано"
+                    t("всё разобрано")
                   )}
                 </span>
               </button>
             </section>
 
             {recorded === 0 ? (
-              <div className="card rg-empty">За этот период записей нет. Tempro и ActivityWatch тогда не работали.</div>
+              <div className="card rg-empty">{t("За этот период записей нет. Tempro и ActivityWatch тогда не работали.")}</div>
             ) : (
               <>
                 <Heatmap gran={gran} days={days} projects={projects} onOpen={(d) => go({ screen: "today", day: d })} />
@@ -214,14 +215,14 @@ function Heatmap({ gran, days, projects, onOpen }: { gran: Gran; days: DaySum[];
   return (
     <section className="card rg-heat">
       <header className="card-head">
-        <span>Календарь</span>
+        <span>{t("Календарь")}</span>
         <div className="card-head-right">
           <span className="rg-scale">
-            меньше
+            {t("меньше")}
             {[0, 1, 2, 3, 4].map((l) => (
               <i key={l} style={{ "--l": l, "--c": METRIC_COLOR[metric] } as CSSProperties} />
             ))}
-            больше
+            {t("больше")}
           </span>
           <div className="segmented segmented-sm">
             {(Object.keys(METRIC_LABEL) as Metric[]).map((m) => (
@@ -239,7 +240,7 @@ function Heatmap({ gran, days, projects, onOpen }: { gran: Gran; days: DaySum[];
               <div key={m.start} className="rg-month">
                 <span className="rg-month-name">{monthTitle(m.start)}</span>
                 <div className="rg-month-grid">
-                  {["пн", "вт", "ср", "чт", "пт", "сб", "вс"].map((w) => (
+                  {WD_SHORT.map((w) => (
                     <span key={w} className="rg-month-wd">
                       {w}
                     </span>
@@ -252,7 +253,7 @@ function Heatmap({ gran, days, projects, onOpen }: { gran: Gran; days: DaySum[];
         ) : (
           <div className="rg-heat-grid" style={{ "--weeks": weeks.length } as CSSProperties}>
             <span />
-            {["пн", "", "ср", "", "пт", "", "вс"].map((w, i) => (
+            {WD_SHORT.map((w, i) => (i % 2 === 0 ? w : "")).map((w, i) => (
               <span key={i} className="rg-heat-wd">
                 {w}
               </span>
@@ -280,12 +281,12 @@ function DayTip({ d, x, y, projects }: { d: DaySum; x: number; y: number; projec
     .filter((e): e is [string, number] => !!e[0] && projects.has(e[0]) && e[1] >= 5 * 60_000)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 3);
-  const date = `${weekday(d.day)}, ${dayNum(d.day)} ${monthGen(d.day)}`;
+  const date = weekdayDate(d.day);
   return (
     <div className="rg-tip" style={{ left: x, top: y }}>
       <b>{date}</b>
       {d.active < 60_000 ? (
-        <span className="muted">{d.day > Date.now() ? "ещё впереди" : "записей нет"}</span>
+        <span className="muted">{d.day > Date.now() ? t("ещё впереди") : t("записей нет")}</span>
       ) : (
         <>
           <span className="rg-tip-kinds">
@@ -303,7 +304,7 @@ function DayTip({ d, x, y, projects }: { d: DaySum; x: number; y: number; projec
               <span>{dur(ms)}</span>
             </span>
           ))}
-          <span className="muted">всего {dur(d.active)}</span>
+          <span className="muted">{t("всего {d}", { d: dur(d.active) })}</span>
         </>
       )}
     </div>
@@ -337,10 +338,10 @@ function Bars({ gran, days, projects, from, to, onOpen }: { gran: Gran; days: Da
   return (
     <section className="card rg-bars">
       <header className="card-head">
-        <span>{gran === "year" ? "По месяцам" : "По неделям"}</span>
+        <span>{gran === "year" ? t("По месяцам") : t("По неделям")}</span>
         {avg > 0 && (
           <span className="muted">
-            в среднем {dur(avg)} работы за {gran === "year" ? "месяц" : "неделю"}
+            {gran === "year" ? t("в среднем {d} работы за месяц", { d: dur(avg) }) : t("в среднем {d} работы за неделю", { d: dur(avg) })}
           </span>
         )}
         <span className="mon-legend card-head-right">
@@ -365,7 +366,7 @@ function Bars({ gran, days, projects, from, to, onOpen }: { gran: Gran; days: Da
               disabled={future}
               data-now={(b.start <= now && now < b.end) || undefined}
               onClick={() => onOpen(gran === "year" ? "month" : "week", Math.min(b.start, startOfDay(now)))}
-              title={[...KINDS.map((k) => ((b.by.get(k) ?? 0) >= 60_000 ? `${KIND_LABEL[k]} ${dur(b.by.get(k)!)}` : "")), (b.by.get(null) ?? 0) >= 60_000 ? `без проекта ${dur(b.by.get(null)!)}` : ""].filter(Boolean).join(" · ")}
+              title={[...KINDS.map((k) => ((b.by.get(k) ?? 0) >= 60_000 ? `${KIND_LABEL[k]} ${dur(b.by.get(k)!)}` : "")), (b.by.get(null) ?? 0) >= 60_000 ? t("без проекта {d}", { d: dur(b.by.get(null)!) }) : ""].filter(Boolean).join(" · ")}
             >
               <span className="rg-bar-val">{work >= 60_000 ? dur(work) : ""}</span>
               <span className="rg-bar-track">
@@ -425,7 +426,7 @@ function RangeProjects({ gran, days, totals, prevTotals, projects, from, to, onO
   return (
     <section className="card mon-projects">
       <header className="card-head">
-        <span>Проекты</span>
+        <span>{t("Проекты")}</span>
         <span className="muted">{rows.length}</span>
         <div className="card-head-right">
           <div className="segmented segmented-sm">
@@ -437,7 +438,7 @@ function RangeProjects({ gran, days, totals, prevTotals, projects, from, to, onO
           </div>
         </div>
       </header>
-      {rows.length === 0 && <div className="empty">За этот период здесь ничего</div>}
+      {rows.length === 0 && <div className="empty">{t("За этот период здесь ничего")}</div>}
       {shown.map(([id, ms]) => {
         const p = projects.get(id)!;
         const before = prevTotals.get(id) ?? 0;
@@ -449,7 +450,7 @@ function RangeProjects({ gran, days, totals, prevTotals, projects, from, to, onO
           <button key={id} type="button" className="mon-prow rg-prow" data-ctx-project={id} onClick={() => onOpen(id)}>
             <ProjectIcon project={p} size={20} />
             <span className="truncate">{p.name}</span>
-            <span className="rg-spark" title={gran === "year" ? "по месяцам" : "по неделям"}>
+            <span className="rg-spark" title={gran === "year" ? t("по месяцам") : t("по неделям")}>
               {s.map((v, i) => (
                 <i key={i} style={{ height: `${Math.max(v ? 8 : 0, (v / smax) * 100)}%`, background: p.color }} />
               ))}
@@ -457,22 +458,22 @@ function RangeProjects({ gran, days, totals, prevTotals, projects, from, to, onO
             <span className="rg-share">{kindTotal ? `${Math.round((ms / kindTotal) * 100)}%` : ""}</span>
             <b>{dur(ms)}</b>
             <span className="mon-pdiff" data-tone={tone}>
-              {!compare ? "" : before < 30 * 60_000 ? "новый" : Math.abs(diff) < 30 * 60_000 ? "≈" : `${diff > 0 ? "+" : "−"}${dur(Math.abs(diff))}`}
+              {!compare ? "" : before < 30 * 60_000 ? t("новый") : Math.abs(diff) < 30 * 60_000 ? "≈" : `${diff > 0 ? "+" : "−"}${dur(Math.abs(diff))}`}
             </span>
           </button>
         );
       })}
       {rows.length > LIMIT && (
         <button type="button" className="mon-gone rg-more" onClick={() => setAll((a) => !a)}>
-          {all ? "Свернуть" : `Ещё ${rows.length - LIMIT}: ${dur(rows.slice(LIMIT).reduce((n, [, ms]) => n + ms, 0))}`}
+          {all ? t("Свернуть") : t("Ещё {n}: {d}", { n: rows.length - LIMIT, d: dur(rows.slice(LIMIT).reduce((n, [, ms]) => n + ms, 0)) })}
         </button>
       )}
     </section>
   );
 }
 
-const WD_FULL = ["понедельник", "вторник", "среда", "четверг", "пятница", "суббота", "воскресенье"];
-const WD_SHORT = ["пн", "вт", "ср", "чт", "пт", "сб", "вс"];
+const WD_FULL = [t("понедельник"), t("вторник"), t("среда"), t("четверг"), t("пятница"), t("суббота"), t("воскресенье")];
+const WD_SHORT = [t("пн"), t("вт"), t("ср"), t("чт"), t("пт"), t("сб"), t("вс")];
 
 /** When the work happens: the average weekday, and a week of hours. */
 export function Rhythm({ days, projects }: { days: DaySum[]; projects: Map<string, Project> }) {
@@ -508,10 +509,12 @@ export function Rhythm({ days, projects }: { days: DaySum[]; projects: Map<strin
   return (
     <section className="card rg-rhythm">
       <header className="card-head">
-        <span>Когда</span>
+        <span>{t("Когда")}</span>
         {has && (
           <span className="muted">
-            {metric === "work" ? "больше всего работы" : "больше всего досуга"} с {peak} до {peak + 4} · {WD_FULL[best]}
+            {metric === "work"
+              ? t("больше всего работы с {a} до {b} · {wd}", { a: peak, b: peak + 4, wd: WD_FULL[best] })
+              : t("больше всего досуга с {a} до {b} · {wd}", { a: peak, b: peak + 4, wd: WD_FULL[best] })}
           </span>
         )}
         <div className="card-head-right">
@@ -525,7 +528,7 @@ export function Rhythm({ days, projects }: { days: DaySum[]; projects: Map<strin
         </div>
       </header>
       {!has ? (
-        <div className="empty">Нет данных</div>
+        <div className="empty">{t("Нет данных")}</div>
       ) : (
         <div className="rg-rhythm-body">
           <div className="rg-hours">
@@ -533,7 +536,7 @@ export function Rhythm({ days, projects }: { days: DaySum[]; projects: Map<strin
               <div key={i} className="rg-hours-row">
                 <span className="rg-hours-wd">{WD_SHORT[i]}</span>
                 {row.map((ms, h) => (
-                  <i key={h} style={{ "--l": ms < 30_000 ? 0 : Math.max(1, Math.ceil((ms / cmax) * 4)), "--c": c } as CSSProperties} title={`${WD_SHORT[i]} ${h}:00–${h + 1}:00 · в среднем ${dur(ms)}`} />
+                  <i key={h} style={{ "--l": ms < 30_000 ? 0 : Math.max(1, Math.ceil((ms / cmax) * 4)), "--c": c } as CSSProperties} title={t("{wd} {h}:00–{h2}:00 · в среднем {d}", { wd: WD_SHORT[i], h, h2: h + 1, d: dur(ms) })} />
                 ))}
               </div>
             ))}
@@ -554,7 +557,7 @@ export function Rhythm({ days, projects }: { days: DaySum[]; projects: Map<strin
                 <b>{dur(ms)}</b>
               </div>
             ))}
-            <span className="rg-wd-note">в среднем за день недели</span>
+            <span className="rg-wd-note">{t("в среднем за день недели")}</span>
           </div>
         </div>
       )}
@@ -593,33 +596,33 @@ export function Highlights({ days, workOf, totals, prevTotals, projects }: { day
   const live = days.at(-1)?.day === startOfDay(Date.now());
   const items: { label: string; value: string; sub?: string; onClick?: () => void }[] = [];
   if (h.bestDay && (workOf.get(h.bestDay.day) ?? 0) >= HOUR)
-    items.push({ label: "Самый рабочий день", value: dur(workOf.get(h.bestDay.day)!), sub: `${weekday(h.bestDay.day)}, ${dayNum(h.bestDay.day)} ${monthGen(h.bestDay.day)}`, onClick: () => go({ screen: "today", day: h.bestDay!.day }) });
+    items.push({ label: t("Самый рабочий день"), value: dur(workOf.get(h.bestDay.day)!), sub: weekdayDate(h.bestDay.day), onClick: () => go({ screen: "today", day: h.bestDay!.day }) });
   if (h.bestWeek && h.bestWeek[1] >= HOUR)
-    items.push({ label: "Лучшая неделя", value: dur(h.bestWeek[1]), sub: `${dayNum(h.bestWeek[0])} ${monthGen(h.bestWeek[0])} – ${dayNum(addDays(h.bestWeek[0], 6))} ${monthGen(addDays(h.bestWeek[0], 6))}`, onClick: () => go({ screen: "week", day: h.bestWeek![0] }) });
+    items.push({ label: t("Лучшая неделя"), value: dur(h.bestWeek[1]), sub: `${dayMonth(h.bestWeek[0])} – ${dayMonth(addDays(h.bestWeek[0], 6))}`, onClick: () => go({ screen: "week", day: h.bestWeek![0] }) });
   if (h.longest)
     items.push({
-      label: "Самая длинная сессия",
+      label: t("Самая длинная сессия"),
       value: dur(h.longest.active),
       sub: [h.longest.projectId ? projects.get(h.longest.projectId)?.name : null, h.longest.label].filter(Boolean)[0] ?? "",
       onClick: () => go({ screen: "today", day: startOfDay(h.longest!.start) }),
     });
   if (h.streak.len >= 2)
     items.push({
-      label: "Дней работы подряд",
+      label: t("Дней работы подряд"),
       value: String(h.streak.len),
       // "now" only means something while the period is still running
-      sub: !live || h.current < 2 ? `до ${dayNum(h.streak.end)} ${monthGen(h.streak.end)}` : h.current === h.streak.len ? "и это сейчас" : `сейчас ${h.current}`,
+      sub: !live || h.current < 2 ? t("до {d}", { d: dayMonth(h.streak.end) }) : h.current === h.streak.len ? t("и это сейчас") : t("сейчас {n}", { n: h.current }),
     });
   if (h.fresh.length)
-    items.push({ label: h.fresh.length === 1 ? "Новый проект" : `Новых проектов: ${h.fresh.length}`, value: projects.get(h.fresh[0][0])!.name, sub: h.fresh.slice(1, 3).map(([id]) => projects.get(id)!.name).join(", ") || dur(h.fresh[0][1]), onClick: () => go({ screen: "project", projectId: h.fresh[0][0] }) });
+    items.push({ label: h.fresh.length === 1 ? t("Новый проект") : t("Новых проектов: {n}", { n: h.fresh.length }), value: projects.get(h.fresh[0][0])!.name, sub: h.fresh.slice(1, 3).map(([id]) => projects.get(id)!.name).join(", ") || dur(h.fresh[0][1]), onClick: () => go({ screen: "project", projectId: h.fresh[0][0] }) });
   if (h.leisureDay && h.leisureDay.ms >= HOUR)
-    items.push({ label: "Больше всего досуга", value: dur(h.leisureDay.ms), sub: `${weekday(h.leisureDay.d.day)}, ${dayNum(h.leisureDay.d.day)} ${monthGen(h.leisureDay.d.day)}`, onClick: () => go({ screen: "today", day: h.leisureDay!.d.day }) });
+    items.push({ label: t("Больше всего досуга"), value: dur(h.leisureDay.ms), sub: weekdayDate(h.leisureDay.d.day), onClick: () => go({ screen: "today", day: h.leisureDay!.d.day }) });
 
   if (!items.length) return null;
   return (
     <section className="card rg-hl">
       <header className="card-head">
-        <span>Заметное</span>
+        <span>{t("Заметное")}</span>
       </header>
       {items.map((it) =>
         it.onClick ? (
@@ -674,7 +677,7 @@ export function highlightFacts(days: DaySum[], projects: Map<string, Project>) {
     const l = kindTotals(d.byProject, projects).get("leisure") ?? 0;
     if (!leisure || l > leisure.ms) leisure = { d, ms: l };
   }
-  const date = (t: number) => `${dayNum(t)} ${monthGen(t)}`;
+  const date = dayMonth;
   return {
     busiestWorkDay: best && (work.get(best.day) ?? 0) >= HOUR ? { date: date(best.day), workHours: h(work.get(best.day)!) } : null,
     longestWorkStreakDays: streak >= 2 ? streak : null,
@@ -699,7 +702,7 @@ function RangeSummary({ name, title, totals, prevTotals, projects, active, days 
   const compare = [...prevTotals.values()].reduce((n, ms) => n + ms, 0) >= 10 * HOUR;
 
   const payload = () => {
-    const kinds = (m: Totals) => Object.fromEntries([...kindTotals(m, projects)].map(([k, ms]) => [k ? KIND_LABEL[k] : "Без проекта", h(ms)]));
+    const kinds = (m: Totals) => Object.fromEntries([...kindTotals(m, projects)].map(([k, ms]) => [k ? KIND_LABEL[k] : t("Без проекта"), h(ms)]));
     const longest = days.reduce<DaySum["longest"]>((b, d) => (d.longest && (!b || d.longest.active > b.active) ? d.longest : b), null);
     return {
       period: name,
@@ -715,14 +718,14 @@ function RangeSummary({ name, title, totals, prevTotals, projects, active, days 
       ...rhythmFacts(days, projects),
       highlights: {
         ...highlightFacts(days, projects),
-        longestSession: longest ? { title: longest.label, project: projects.get(longest.projectId ?? "")?.name ?? null, hours: h(longest.active), date: new Date(longest.start).toLocaleDateString("ru-RU") } : null,
+        longestSession: longest ? { title: longest.label, project: projects.get(longest.projectId ?? "")?.name ?? null, hours: h(longest.active), date: new Date(longest.start).toLocaleDateString(locale()) } : null,
       },
     };
   };
 
   return (
     <section className="card mon-ai">
-      <AiSummaryBody id={`${name}:${title}`} payload={payload} empty="Claude напишет, на что ушло это время и что изменилось" />
+      <AiSummaryBody id={`${name}:${title}`} payload={payload} empty={t("Claude напишет, на что ушло это время и что изменилось")} />
     </section>
   );
 }

@@ -1,7 +1,7 @@
 // Projects and rules. Saved in Tempro's SQLite (kv "store"); localStorage only mirrors it for the
 // browser dev mode and carries over what the first prototype kept there.
 import { useSyncExternalStore } from "react";
-import { PALETTE, PERSONAL, seedProjects } from "../engine/rules";
+import { PALETTE, PALETTE_V1, PERSONAL, seedProjects } from "../engine/rules";
 import type { Project, Rule, RuleField } from "../engine/types";
 import { call, DEMO, hasBackend } from "./api";
 
@@ -21,7 +21,9 @@ function local(): Data | null {
 /** Rules from the prototype used "title"; the seed now looks in every field. */
 function upgrade(d: Data): Data {
   const rules = d.rules.map((r) => (r.source === "default" && r.field === "title" ? { ...r, field: "any" as RuleField } : r));
-  const projects = d.projects.some((p) => p.id === PERSONAL.id) ? d.projects : [...d.projects, PERSONAL];
+  const base = d.projects.some((p) => p.id === PERSONAL.id) ? d.projects : [...d.projects, PERSONAL];
+  // the first palette's darkest and lightest colours were unreadable on one of the themes
+  const projects = base.map((p) => (PALETTE_V1[p.color?.toLowerCase()] ? { ...p, color: PALETTE_V1[p.color.toLowerCase()] } : p));
   return { ...d, projects, rules };
 }
 

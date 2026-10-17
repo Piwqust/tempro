@@ -2,6 +2,7 @@ import { isTauri } from "@tauri-apps/api/core";
 import { call } from "../data/api";
 import type { Project, Session } from "../engine/types";
 import { HOUR } from "./time";
+import { t } from "./i18n";
 
 const cell = (v: string | number) => {
   const s = String(v);
@@ -16,7 +17,7 @@ const stamp = (t: number) => {
 
 /** Semicolons and decimal commas: what Russian Excel expects. */
 export function sessionsCsv(sessions: Session[], projects: Map<string, Project>): string {
-  const head = ["Проект", "Начало", "Конец", "Часы", "Ставка", "Сумма", "Чем занимался"];
+  const head = [t("Проект"), t("Начало"), t("Конец"), t("Часы"), t("Ставка"), t("Сумма"), t("Чем занимался")];
   const rows = [...sessions]
     .sort((a, b) => a.start - b.start)
     .map((s) => {
@@ -24,7 +25,7 @@ export function sessionsCsv(sessions: Session[], projects: Map<string, Project>)
       const hours = s.active / HOUR;
       const rate = p?.rate ?? 0;
       return [
-        p?.name ?? "Без проекта",
+        p?.name ?? t("Без проекта"),
         stamp(s.start),
         stamp(s.end),
         hours.toFixed(2).replace(".", ","),

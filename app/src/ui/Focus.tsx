@@ -4,6 +4,7 @@ import { Square, Target } from "lucide-react";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useBackend, useManual } from "../data/backend";
 import { useModel, useProjects } from "../data/useModel";
+import { t } from "../lib/i18n";
 import { addDays, HOUR, startOfDay } from "../lib/time";
 import { Popover } from "./Popover";
 import { ProjectPicker } from "./ProjectPicker";
@@ -51,16 +52,16 @@ export function Focus() {
       {cur ? (
         <div className="focus-on" style={{ "--c": p?.color ?? "var(--ink-3)" } as CSSProperties}>
           <span className="focus-dot" />
-          <span className="truncate">{p?.name ?? "Фокус"}</span>
+          <span className="truncate">{p?.name ?? t("Фокус")}</span>
           <span className="focus-time">{elapsed(now - cur.start)}</span>
-          <button type="button" className="icon-btn" title="Остановить" onClick={() => manual.end(cur.id, Date.now())}>
+          <button type="button" className="icon-btn" title={t("Остановить")} onClick={() => manual.end(cur.id, Date.now())}>
             <Square size={13} fill="currentColor" />
           </button>
         </div>
       ) : (
         <button ref={btn} type="button" className="focus-start" onClick={() => setOpen(true)}>
           <Target size={15} strokeWidth={1.75} />
-          Сейчас работаю над…
+          {t("Сейчас работаю над…")}
         </button>
       )}
       <Popover anchor={btn.current} open={open && !cur} onClose={() => setOpen(false)}>
@@ -70,7 +71,7 @@ export function Focus() {
             setOpen(false);
             manual.add({ start: Date.now(), end: Date.now() + 8 * HOUR, kind: "focus", projectId: id });
           }}
-          footer={<span>Всё время до остановки уйдёт в проект, правила не нужны.</span>}
+          footer={<span>{t("Всё время до остановки уйдёт в проект, правила не нужны.")}</span>}
         />
       </Popover>
     </div>

@@ -22,6 +22,8 @@ export type Settings = {
   hotkey: string;
   /** titles, addresses and screen text older than this are wiped; 0 = keep */
   detailDays: number;
+  /** interface language; the backend uses it for the tray menu, messages and AI answers */
+  lang: "auto" | "ru" | "en";
 };
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -43,6 +45,7 @@ export const DEFAULT_SETTINGS: Settings = {
   questionMinutes: 15,
   hotkey: "Ctrl+Alt+T",
   detailDays: 30,
+  lang: "auto",
 };
 
 export type Status = {

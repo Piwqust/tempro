@@ -1,17 +1,22 @@
+import { t } from "../lib/i18n";
 import type { Project, ProjectKind, Rule } from "./types";
 
+// every colour keeps at least 3:1 against both the white card and the dark one
 export const PALETTE = [
   "#FF5A1F", // orange
-  "#6B17D6", // violet
+  "#8B5CF6", // violet
   "#2F6BFF", // blue
   "#16A06A", // green
   "#E5408A", // pink
-  "#E9A800", // amber
+  "#C28400", // amber
   "#0E9FA8", // teal
   "#E5484D", // red
-  "#3E3BB8", // indigo
-  "#8A6A4A", // brown
+  "#6366F1", // indigo
+  "#A0764E", // brown
 ];
+
+/** Colours of the first palette that vanished on one of the themes, and what replaces them. */
+export const PALETTE_V1: Record<string, string> = { "#6b17d6": "#8B5CF6", "#e9a800": "#C28400", "#3e3bb8": "#6366F1", "#8a6a4a": "#A0764E" };
 
 // Drafted from ActivityWatch history (docs/01). The user edits these on the Projects screen.
 /** Starter projects for a fresh install. Kept empty on purpose: projects come from your own
@@ -19,10 +24,10 @@ export const PALETTE = [
 const SEED: { name: string; keys: string[] }[] = [];
 
 /** Not work: games, videos, feeds. Lets "sorted" reach 100% without pretending it's a client. */
-export const PERSONAL: Project = { id: "p_personal", name: "Личное", color: "#8A8FA3", kind: "personal" };
+export const PERSONAL: Project = { id: "p_personal", name: t("Личное"), color: "#8A8FA3", kind: "personal" };
 
 export const KINDS: ProjectKind[] = ["work", "leisure", "personal", "system"];
-export const KIND_LABEL: Record<ProjectKind, string> = { work: "Работа", leisure: "Досуг", personal: "Личное", system: "Служебное" };
+export const KIND_LABEL: Record<ProjectKind, string> = { work: t("Работа"), leisure: t("Досуг"), personal: t("Личное"), system: t("Служебное") };
 export const KIND_COLOR: Record<ProjectKind, string> = { work: "#2F6BFF", leisure: "#E5408A", personal: "#16A06A", system: "#8A8FA3" };
 export const kindOf = (p: Project | undefined): ProjectKind => p?.kind ?? (p?.id === PERSONAL.id ? "personal" : "work");
 

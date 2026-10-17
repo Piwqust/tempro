@@ -10,6 +10,7 @@ import { useModel, useProjects } from "../data/useModel";
 import { appName } from "../engine/context";
 import { PERSONAL } from "../engine/rules";
 import type { Model } from "../engine/types";
+import { t, tj } from "../lib/i18n";
 import { addDays, dayNum, dur, MIN, startOfDay, weekday } from "../lib/time";
 import { AppIcon } from "../ui/bits";
 import { Popover } from "../ui/Popover";
@@ -24,9 +25,9 @@ type Suggestion = { id: string; projectId: string | null; confidence: number; re
 const rowId = (app: string, ctx: string) => `${app}\u0000${ctx}`;
 
 const RANGES = [
-  { id: 1, label: "Сегодня" },
-  { id: 7, label: "7 дней" },
-  { id: 30, label: "30 дней" },
+  { id: 1, label: t("Сегодня") },
+  { id: 7, label: t("7 дней") },
+  { id: 30, label: t("30 дней") },
 ] as const;
 
 const TINTS = ["blue", "amber", "olive", "green"] as const;
@@ -85,7 +86,7 @@ export function Unsorted() {
     <>
       <TopBar
         icon={<Inbox size={14} strokeWidth={1.9} />}
-        section="Неразобранное"
+        section={t("Неразобранное")}
         right={
           <div className="segmented">
             {RANGES.map((r) => (
@@ -98,22 +99,22 @@ export function Unsorted() {
       />
       <div className="filterbar">
         <span className="summary summary-left">
-          <b>{dur(total)}</b> без проекта
+          {tj("{dur} без проекта", { dur: <b>{dur(total)}</b> })}
           <span className="summary-sep" />
-          разобрано {share}% времени
+          {t("разобрано {share}% времени", { share })}
         </span>
         <span className="filterbar-right hint">
           {aiState.error ? (
             <span className="summary-err">{aiState.error}</span>
           ) : aiState.done !== undefined ? (
-            `ИИ разнёс ${aiState.done} строк — проверить можно на странице проекта ✨`
+            t("ИИ разнёс {n} строк — проверить можно на странице проекта ✨", { n: aiState.done })
           ) : (
-            "Проект для строки или всей программы (+) — правило сразу пересчитает историю"
+            t("Проект для строки или всей программы (+) — правило сразу пересчитает историю")
           )}
         </span>
         {available && settings.aiProvider !== "none" && (
           <button type="button" className="btn btn-ghost-white" disabled={aiState.busy || !groups.length} onClick={suggest}>
-            <Sparkles size={15} /> {aiState.busy ? "Думаю…" : "Предложить с ИИ"}
+            <Sparkles size={15} /> {aiState.busy ? t("Думаю…") : t("Предложить с ИИ")}
           </button>
         )}
       </div>
@@ -123,7 +124,7 @@ export function Unsorted() {
         ) : loading || !model ? (
           <Loading />
         ) : groups.length === 0 ? (
-          <div className="empty">Всё разобрано</div>
+          <div className="empty">{t("Всё разобрано")}</div>
         ) : (
           <>
             <NewProjectsCard />
@@ -151,7 +152,7 @@ function AppGroup({ group, tint, hints }: { group: Group; tint: (typeof TINTS)[n
         </span>
         <span className="count-pill">{group.rows.length}</span>
         <span className="group-total">{dur(group.ms)}</span>
-        <button ref={plus} type="button" className="icon-btn" title={`Вся программа ${appName(group.app)} → проект`} onClick={() => setPicking(true)}>
+        <button ref={plus} type="button" className="icon-btn" title={t("Вся программа {app} → проект", { app: appName(group.app) })} onClick={() => setPicking(true)}>
           <Plus size={17} strokeWidth={1.7} />
         </button>
         <Popover anchor={plus.current} open={picking} onClose={() => setPicking(false)}>
@@ -161,7 +162,7 @@ function AppGroup({ group, tint, hints }: { group: Group; tint: (typeof TINTS)[n
               assignApp(id, group.app);
               setPicking(false);
             }}
-            footer={<span>Всё время в {appName(group.app)} уйдёт в выбранный проект.</span>}
+            footer={<span>{t("Всё время в {app} уйдёт в выбранный проект.", { app: appName(group.app) })}</span>}
           />
         </Popover>
       </header>
@@ -171,7 +172,7 @@ function AppGroup({ group, tint, hints }: { group: Group; tint: (typeof TINTS)[n
         ))}
         {group.rows.length > limit && (
           <button type="button" className="row-more" onClick={() => setLimit((l) => l + 20)}>
-            Показать ещё {Math.min(20, group.rows.length - limit)} из {group.rows.length - limit}
+            {t("Показать ещё {n} из {rest}", { n: Math.min(20, group.rows.length - limit), rest: group.rows.length - limit })}
           </button>
         )}
       </div>
@@ -189,7 +190,7 @@ function UnsortedRow({ app, row, hint }: { app: string; row: Row; hint?: Suggest
       <CircleDashed size={17} strokeWidth={1.6} className="row-status" />
       <span className="row-title truncate">{row.context}</span>
       <span className="row-meta">
-        {row.days.size > 1 ? `${row.days.size} дн.` : `${weekday(row.last)} ${dayNum(row.last)}`}
+        {row.days.size > 1 ? t("{n} дн.", { n: row.days.size }) : `${weekday(row.last)} ${dayNum(row.last)}`}
       </span>
       {hp && (
         <button
@@ -205,12 +206,12 @@ function UnsortedRow({ app, row, hint }: { app: string; row: Row; hint?: Suggest
         </button>
       )}
       {projects.has(PERSONAL.id) && (
-        <button type="button" className="row-assign row-assign-quiet" title="Не работа: игры, видео, соцсети" onClick={() => assign(PERSONAL.id, app, row.context)}>
-          Личное
+        <button type="button" className="row-assign row-assign-quiet" title={t("Не работа: игры, видео, соцсети")} onClick={() => assign(PERSONAL.id, app, row.context)}>
+          {t("Личное")}
         </button>
       )}
       <button ref={btn} type="button" className="row-assign" onClick={() => setPicking(true)}>
-        Проект
+        {t("Проект")}
       </button>
       <span className="row-dur">{dur(row.ms)}</span>
       <Popover anchor={btn.current} open={picking} onClose={() => setPicking(false)} align="end">
@@ -263,7 +264,7 @@ function NewProjectsCard() {
     <section className="card newp">
       <header className="card-head">
         <Sparkles size={14} />
-        <span>ИИ нашёл проекты, которых нет в списке</span>
+        <span>{t("ИИ нашёл проекты, которых нет в списке")}</span>
       </header>
       {(all ? list : list.slice(0, 6)).map((v) => {
         // where it was seen, without repeating the name itself
@@ -277,9 +278,9 @@ function NewProjectsCard() {
           </span>
           <span className="newp-min">{dur(v.minutes * 60_000)}</span>
           <button type="button" className="btn btn-ghost-white" onClick={() => create(v)}>
-            <Check size={14} /> Создать
+            <Check size={14} /> {t("Создать")}
           </button>
-          <button type="button" className="icon-btn" title="Не проект" onClick={() => drop(v.keys)}>
+          <button type="button" className="icon-btn" title={t("Не проект")} onClick={() => drop(v.keys)}>
             <X size={15} />
           </button>
         </div>
@@ -287,7 +288,7 @@ function NewProjectsCard() {
       })}
       {list.length > 6 && (
         <button type="button" className="row-more newp-more" onClick={() => setAll((a) => !a)}>
-          {all ? "Свернуть" : `Ещё ${list.length - 6}`}
+          {all ? t("Свернуть") : t("Ещё {n}", { n: list.length - 6 })}
         </button>
       )}
     </section>

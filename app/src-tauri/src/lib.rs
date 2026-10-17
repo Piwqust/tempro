@@ -4,6 +4,7 @@ mod api;
 mod aw;
 mod db;
 mod guard;
+mod i18n;
 mod icons;
 mod lock;
 mod ocr;
@@ -28,6 +29,18 @@ async fn call(state: tauri::State<'_, Arc<AppState>>, name: String, args: Value)
     let state = state.inner().clone();
     // SQLite, file scans and HTTP block; keep them off the async runtime
     tauri::async_runtime::spawn_blocking(move || api::call(&state, &name, args)).await.map_err(|e| e.to_string())?
+}
+
+/// Tray items, kept to relabel them when the language changes.
+static TRAY: std::sync::OnceLock<(MenuItem<tauri::Wry>, MenuItem<tauri::Wry>, CheckMenuItem<tauri::Wry>, MenuItem<tauri::Wry>)> = std::sync::OnceLock::new();
+
+pub fn relabel_tray() {
+    if let Some((open, focus, pause, quit)) = TRAY.get() {
+        let _ = open.set_text(i18n::tr("Открыть Tempro", "Open Tempro"));
+        let _ = focus.set_text(i18n::tr("Сейчас работаю над…", "I'm working on…"));
+        let _ = pause.set_text(i18n::tr("Пауза записи", "Pause recording"));
+        let _ = quit.set_text(i18n::tr("Выйти", "Quit"));
+    }
 }
 
 fn show_main(app: &AppHandle) {
@@ -74,6 +87,7 @@ fn start_backend() -> Arc<AppState> {
         let _ = db::meta_set(&write, "own_start", &timeutil::now_ms().to_string());
     }
     let settings = Arc::new(RwLock::new(db::load_settings(&write)));
+    i18n::apply(&settings.read().unwrap());
     let (tx, rx) = mpsc::channel::<Msg>();
     let state = Arc::new(AppState {
         db_path: path,
@@ -192,11 +206,12 @@ pub fn run() {
                 }
             }
 
-            let open = MenuItem::with_id(app, "open", "Открыть Tempro", true, None::<&str>)?;
-            let focus = MenuItem::with_id(app, "focus", "Сейчас работаю над…", true, None::<&str>)?;
-            let pause = CheckMenuItem::with_id(app, "pause", "Пауза записи", true, false, None::<&str>)?;
+            let open = MenuItem::with_id(app, "open", i18n::tr("Открыть Tempro", "Open Tempro"), true, None::<&str>)?;
+            let focus = MenuItem::with_id(app, "focus", i18n::tr("Сейчас работаю над…", "I'm working on…"), true, None::<&str>)?;
+            let pause = CheckMenuItem::with_id(app, "pause", i18n::tr("Пауза записи", "Pause recording"), true, false, None::<&str>)?;
             let sep = PredefinedMenuItem::separator(app)?;
-            let quit = MenuItem::with_id(app, "quit", "Выйти", true, None::<&str>)?;
+            let quit = MenuItem::with_id(app, "quit", i18n::tr("Выйти", "Quit"), true, None::<&str>)?;
+            let _ = TRAY.set((open.clone(), focus.clone(), pause.clone(), quit.clone()));
             let menu = Menu::with_items(app, &[&open, &focus, &pause, &sep, &quit])?;
             let st = state.clone();
             let pause_item = pause.clone();

@@ -1,13 +1,44 @@
 /* Project icons, the lock screen, the right-click menu, AI summaries. */
 
 /* ---------- project icon: the glyph on a tint of the project's colour ---------- */
+/* --c-ink: the project colour moved towards the text colour, so it reads on either theme */
+.picon,
+.ps-icon,
+.sl-project[data-c] {
+  --c-ink: color-mix(in oklab, var(--c) 80%, var(--ink));
+}
 .picon {
   display: inline-grid;
   place-items: center;
   flex: none;
   border-radius: 28%;
-  background: color-mix(in srgb, var(--c) 16%, transparent);
-  color: var(--c);
+  background: color-mix(in srgb, var(--c) 15%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 22%, transparent);
+  color: var(--c-ink);
+}
+@media (prefers-color-scheme: dark) {
+  .picon,
+  .ps-icon,
+  .sl-project[data-c] {
+    --c-ink: color-mix(in oklab, var(--c) 62%, white);
+  }
+  .picon {
+    background: color-mix(in srgb, var(--c) 26%, transparent);
+  }
+  .mon-pdiff[data-tone="new"] {
+    color: #b39cf5;
+  }
+  .mon-pdiff[data-tone="up"],
+  .mon-delta[data-tone="good"] {
+    color: #3ccf8e;
+  }
+  .mon-pdiff[data-tone="down"],
+  .mon-delta[data-tone="bad"] {
+    color: #ff6b70;
+  }
+}
+.sl-project[data-c] {
+  color: var(--c-ink);
 }
 .picon-none {
   background: transparent;
@@ -55,7 +86,7 @@
 }
 .ps-icon[data-on] {
   background: color-mix(in srgb, var(--c) 18%, transparent);
-  color: var(--c);
+  color: var(--c-ink);
   box-shadow: inset 0 0 0 1.5px var(--c);
 }
 .ps-icon[data-auto] {

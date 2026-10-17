@@ -106,20 +106,20 @@ pub fn set(conn: &Connection, current: Option<&str>, password: Option<&str>, jou
     if let Some(l) = &old {
         let needs = password.is_some() || !UNLOCKED.load(Ordering::Relaxed);
         if needs && !current.is_some_and(|c| verify(l, c)) {
-            return Err(if current.is_some() { "Неверный текущий пароль" } else { "Нужен текущий пароль" }.into());
+            return Err(if current.is_some() { crate::i18n::tr("Неверный текущий пароль", "Wrong current password") } else { crate::i18n::tr("Нужен текущий пароль", "The current password is required") }.into());
         }
     }
     let next = match (password, old) {
         (Some(""), _) => None,
         (Some(p), _) => {
             if p.chars().count() < 4 {
-                return Err("Пароль — хотя бы 4 символа".into());
+                return Err(crate::i18n::tr("Пароль — хотя бы 4 символа", "The password needs at least 4 characters").into());
             }
             let salt = crate::secrets::random_hex(16)?;
             Some(Lock { hash: derive(p, &salt, ITERATIONS)?, salt, iterations: ITERATIONS, journal, app })
         }
         (None, Some(l)) => Some(Lock { journal, app, ..l }),
-        (None, None) => return Err("Сначала задай пароль".into()),
+        (None, None) => return Err(crate::i18n::tr("Сначала задай пароль", "Set a password first").into()),
     };
     match next {
         Some(l) => db::kv_set(conn, KEY, &serde_json::to_value(l).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?,
@@ -131,11 +131,11 @@ pub fn set(conn: &Connection, current: Option<&str>, password: Option<&str>, jou
 
 /// Forgotten password: the database recovery key proves it's the owner.
 pub fn reset(conn: &Connection, recovery: &str) -> Result<Value, String> {
-    let key = crate::secrets::get(crate::secrets::DB_KEY).ok_or("ключа базы нет")?;
+    let key = crate::secrets::get(crate::secrets::DB_KEY).ok_or(crate::i18n::tr("ключа базы нет", "no database key"))?;
     let given: String = recovery.chars().filter(|c| c.is_ascii_hexdigit()).collect::<String>().to_lowercase();
     if !same(&given, &key.to_lowercase()) {
         std::thread::sleep(std::time::Duration::from_secs(2));
-        return Err("Это не ключ восстановления этой базы".into());
+        return Err(crate::i18n::tr("Это не ключ восстановления этой базы", "This is not the recovery key of this database").into());
     }
     db::kv_set(conn, KEY, &Value::Null).map_err(|e| e.to_string())?;
     UNLOCKED.store(true, Ordering::Relaxed);

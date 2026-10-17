@@ -22,7 +22,11 @@ If `bun run tauri dev` fails on Bun's shims ("could not create process"), run `b
 
 In the browser the interface talks to a running debug build (through Vite's proxy to `127.0.0.1:5601`). Without one it shows ActivityWatch history only.
 
-**Demo mode:** `http://localhost:1420/?demo` shows five months of a made-up person, generated in the page (`app/src/data/demo.ts`); no backend needed. Parameters: `screen=today|week|month|quarter|year|project`, `day=-9` (days from today), `project=p_tempro`, `locked`. The screenshots in `docs/screenshots` come from it.
+**Demo mode:** `http://localhost:1420/?demo` shows five months of a made-up person, generated in the page (`app/src/data/demo.ts`); no backend needed. Parameters: `lang=en|ru`, `screen=today|week|month|quarter|year|project|settings`, `day=-9` (days from today), `project=p_tempro`, `locked`. The screenshots in `docs/screenshots` come from it (`lang=en`, 1440×900).
+
+**README images:** `python brand/readme.py` draws the animated banner, buttons and feature icons into `docs/assets`; `python brand/tour.py` turns the screenshots into `docs/assets/tour.gif`. `python brand/logo.py` regenerates the logo files.
+
+**Languages:** the interface is written in Russian and translated through `t()` from `app/src/lib/i18n.ts`; the English lives in `app/src/i18n/en.*.ts`, keyed by the Russian string. `tj()` takes elements as placeholders, `pl()` picks plural forms. The choice («Settings → Language»: System, Русский, English) is stored in the backend too, which uses it for the tray menu, its messages and the language of AI answers (`src-tauri/src/i18n.rs`).
 
 **Next to an installed Tempro:** a debug build started with `TEMPRO_SIDE=1` runs beside the installed one (no single-instance check, HTTP on `TEMPRO_PORT`), and Vite is pointed at it with `TEMPRO_API`. In release builds `TEMPRO_SIDE` does nothing.
 
@@ -98,7 +102,7 @@ app/src/
   lib/         time, periods, CSV
   ui/ screens/ components and screens
 extension/     Edge/Chrome extension (Manifest V3, no build step)
-brand/         logo files and the script that generates them (python brand/logo.py)
+brand/         logo files and the scripts that draw them and the README images
 ```
 
 ## Decisions

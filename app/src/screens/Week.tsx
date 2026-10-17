@@ -6,6 +6,7 @@ import { useModel, useProjects } from "../data/useModel";
 import type { Model, Project, ProjectKind } from "../engine/types";
 import { addDays, dayNum, dur, HOUR, startOfDay, startOfWeek, weekday } from "../lib/time";
 import { saveCsv, sessionsCsv } from "../lib/csv";
+import { t, tj } from "../lib/i18n";
 import { useNav } from "../nav";
 import { FilterBar, useFilter } from "../ui/FilterBar";
 import { Breakdown, Kinds, Leisure } from "../ui/Overview";
@@ -62,10 +63,10 @@ export function Week() {
         right={
           model && (
             <span className="summary">
-              <b>{dur(work)}</b> работы
-              <Delta now={work} before={prevWork} than={prev.partial ? "к тем же дням прошлой недели" : "к прошлой неделе"} />
-              <span className="summary-sep" />в среднем {dur(work / Math.max(1, Math.min(7, Math.ceil((Math.min(Date.now(), to) - from) / (24 * HOUR)))))} в день
-              <span className="summary-sep" />всего за компьютером {dur(model.active)}
+              {tj("{h} работы", { h: <b>{dur(work)}</b> })}
+              <Delta now={work} before={prevWork} than={prev.partial ? t("к тем же дням прошлой недели") : t("к прошлой неделе")} />
+              <span className="summary-sep" />{t("в среднем {d} в день", { d: dur(work / Math.max(1, Math.min(7, Math.ceil((Math.min(Date.now(), to) - from) / (24 * HOUR))))) })}
+              <span className="summary-sep" />{t("всего за компьютером {d}", { d: dur(model.active) })}
             </span>
           )
         }
@@ -81,14 +82,14 @@ export function Week() {
             <div className="today-grid">
               <section className="card today-sessions">
                 <header className="card-head">
-                  <span>Сессии</span>
+                  <span>{t("Сессии")}</span>
                   <span className="muted">{sessions.length}</span>
                 </header>
-                <SessionList sessions={sessions} projects={projects} selected={selected} onSelect={setSelected} grouped dayTotal={dayTotal} empty="За неделю нет активности" />
+                <SessionList sessions={sessions} projects={projects} selected={selected} onSelect={setSelected} grouped dayTotal={dayTotal} empty={t("За неделю нет активности")} />
               </section>
               <div className="today-side">
                 <Kinds totals={model.byProject} projects={projects} active={nav.projectFilter} onPick={(ids) => go({ projectFilter: ids })} />
-                <Breakdown totals={model.byProject} projects={projects} active={nav.projectFilter} onToggle={toggleProject} title="Проекты за неделю" />
+                <Breakdown totals={model.byProject} projects={projects} active={nav.projectFilter} onToggle={toggleProject} title={t("Проекты за неделю")} />
                 <Leisure model={model} projects={projects} limit={5} />
               </div>
             </div>
@@ -137,14 +138,14 @@ function WeekStrip({ model, from, projects, visible, onOpen }: { model: Model; f
                 {parts.map(([k, ms]) => (
                   <span key={k} className="week-seg" style={{ flexGrow: ms, "--c": KIND_COLOR[k] } as CSSProperties} title={`${KIND_LABEL[k]}: ${dur(ms)}`} />
                 ))}
-                {none > 0 && <span className="week-seg week-seg-none" style={{ flexGrow: none }} title={`Без проекта: ${dur(none)}`} />}
+                {none > 0 && <span className="week-seg week-seg-none" style={{ flexGrow: none }} title={t("Без проекта: {d}", { d: dur(none) })} />}
               </span>
             </span>
             <span className="week-total">
               {d.total ? (
                 <>
-                  <b>{dur(work)}</b> работы
-                  <span className="week-all">из {dur(d.total)}</span>
+                  {tj("{h} работы", { h: <b>{dur(work)}</b> })}
+                  <span className="week-all">{t("из {d}", { d: dur(d.total) })}</span>
                 </>
               ) : (
                 "—"

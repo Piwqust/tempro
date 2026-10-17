@@ -4,6 +4,7 @@ import { useState } from "react";
 import { call } from "../data/api";
 import { useBackend } from "../data/backend";
 import { appName } from "../engine/context";
+import { t } from "../lib/i18n";
 import { clock, dayNum, dur, weekday } from "../lib/time";
 import { AppIcon } from "../ui/bits";
 import { TopBar } from "../ui/TopBar";
@@ -12,12 +13,12 @@ import { UnlockForm, useLock } from "../ui/Lock";
 type Row = { stream: string; id: number; ts: number; dur: number; a: string; b: string; source: string };
 
 const STREAMS: [string, string][] = [
-  ["all", "Все"],
-  ["window", "Окна"],
-  ["afk", "Присутствие"],
-  ["media", "Звук и микрофон"],
-  ["browser", "Вкладки"],
-  ["ocr", "Текст с экрана"],
+  ["all", t("Все")],
+  ["window", t("Окна")],
+  ["afk", t("Присутствие")],
+  ["media", t("Звук и микрофон")],
+  ["browser", t("Вкладки")],
+  ["ocr", t("Текст с экрана")],
 ];
 
 /** Raw rows as they were written: for checking the tracker against reality. */
@@ -32,7 +33,7 @@ export function Journal() {
     <>
       <TopBar
         icon={<ScrollText size={14} strokeWidth={1.9} />}
-        section="Журнал"
+        section={t("Журнал")}
         right={
           <div className="segmented">
             {STREAMS.map(([id, l]) => (
@@ -44,15 +45,15 @@ export function Journal() {
         }
       />
       <div className="filterbar">
-        <span className="summary summary-left">Сырые события, новые сверху. Обновляется каждые 4 секунды.</span>
+        <span className="summary summary-left">{t("Сырые события, новые сверху. Обновляется каждые 4 секунды.")}</span>
       </div>
       <div className="screen">
         {journalLocked ? (
           <div className="card unlock-card">
-            <UnlockForm title="Журнал закрыт паролем" hint="Здесь каждое окно и вкладка как есть. Введи пароль, чтобы открыть." />
+            <UnlockForm title={t("Журнал закрыт паролем")} hint={t("Здесь каждое окно и вкладка как есть. Введи пароль, чтобы открыть.")} />
           </div>
         ) : has === false ? (
-          <div className="empty">Журнал доступен, когда запущено приложение Tempro</div>
+          <div className="empty">{t("Журнал доступен, когда запущено приложение Tempro")}</div>
         ) : (
           <div className="card journal">
             {rows.map((r) => (
@@ -69,7 +70,7 @@ export function Journal() {
                 <span className="jdur">{r.dur ? dur(r.dur * 1000) : ""}</span>
               </div>
             ))}
-            {rows.length === 0 && <div className="empty">Пока пусто</div>}
+            {rows.length === 0 && <div className="empty">{t("Пока пусто")}</div>}
           </div>
         )}
       </div>

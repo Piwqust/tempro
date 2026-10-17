@@ -1,5 +1,6 @@
 import { Check, Plus, Search } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { t } from "../lib/i18n";
 
 export type MenuItem = {
   id: string;
@@ -23,7 +24,7 @@ type Props = {
 };
 
 /** Command-style list: type to filter, arrows to move, Enter to pick. */
-export function Menu({ items, onPick, placeholder = "Поиск…", onCreate, createLabel, checkboxes, footer }: Props) {
+export function Menu({ items, onPick, placeholder = t("Поиск…"), onCreate, createLabel, checkboxes, footer }: Props) {
   const [q, setQ] = useState("");
   const [hi, setHi] = useState(0);
   const input = useRef<HTMLInputElement>(null);
@@ -100,10 +101,10 @@ export function Menu({ items, onPick, placeholder = "Поиск…", onCreate, c
             <span className="menu-icon">
               <Plus size={15} />
             </span>
-            <span className="menu-label">{createLabel ? createLabel(q.trim()) : `Создать «${q.trim()}»`}</span>
+            <span className="menu-label">{createLabel ? createLabel(q.trim()) : t("Создать «{name}»", { name: q.trim() })}</span>
           </button>
         )}
-        {total === 0 && <div className="menu-empty">Ничего не найдено</div>}
+        {total === 0 && <div className="menu-empty">{t("Ничего не найдено")}</div>}
       </div>
       {footer && <div className="menu-footer">{footer}</div>}
     </div>

@@ -5,6 +5,7 @@ import { useModel, useProjects } from "../data/useModel";
 import { KIND_COLOR, KIND_LABEL, KINDS, kindOf, kindTotals } from "../engine/rules";
 import type { Model, Project, ProjectKind } from "../engine/types";
 import { saveCsv, sessionsCsv } from "../lib/csv";
+import { locale, pl, t, tj } from "../lib/i18n";
 import { addDays, addMonths, dayNum, dur, HOUR, monthGen, monthTitle, startOfDay, startOfMonth, startOfWeek, weekday } from "../lib/time";
 import { useNav } from "../nav";
 import { Kinds, Leisure } from "../ui/Overview";
@@ -47,7 +48,7 @@ export function Month() {
   const { model, error, loading } = useModel(from, to, 5 * 60_000);
   const { model: prev } = useModel(prevFrom, prevTo, 5 * 60_000);
   const projects = useProjects();
-  const than = isCurrent ? `к 1–${dayNum(prevTo - 1)} ${monthGen(prevFrom)}` : "к прошлому месяцу";
+  const than = isCurrent ? t("к 1–{d} {m}", { d: dayNum(prevTo - 1), m: monthGen(prevFrom) }) : t("к прошлому месяцу");
 
   const days = useMemo(() => (model ? perDay(model, from, to, projects) : []), [model, from, to, projects]);
   const kinds = useMemo(() => (model ? kindTotals(model.byProject, projects) : new Map()), [model, projects]);
@@ -85,34 +86,36 @@ export function Month() {
           <>
             <section className="ov mon-kpis">
               <div className="ov-card ov-main">
-                <span className="ov-label">Работа</span>
+                <span className="ov-label">{t("Работа")}</span>
                 <Num ms={work} />
                 <span className="ov-sub">
-                  {workDays ? `${workDays} рабочих дней · в среднем ${dur(work / workDays)} в день` : "рабочих дней нет"}
+                  {workDays
+                    ? t("{n} {days} · в среднем {avg} в день", { n: workDays, days: pl(workDays, ["рабочий день", "рабочих дня", "рабочих дней"], ["working day", "working days"]), avg: dur(work / workDays) })
+                    : t("рабочих дней нет")}
                 </span>
                 <Delta now={work} before={prevKinds.get("work") ?? 0} than={than} />
               </div>
               <div className="ov-card">
-                <span className="ov-label">Досуг</span>
+                <span className="ov-label">{t("Досуг")}</span>
                 <Num ms={leisure} />
-                <span className="ov-sub">{model.active ? `${Math.round((leisure / model.active) * 100)}% времени за компьютером` : "—"}</span>
+                <span className="ov-sub">{model.active ? t("{pct}% времени за компьютером", { pct: Math.round((leisure / model.active) * 100) }) : "—"}</span>
                 <Delta now={leisure} before={prevKinds.get("leisure") ?? 0} than={than} invert />
               </div>
               <div className="ov-card">
-                <span className="ov-label">За компьютером</span>
+                <span className="ov-label">{t("За компьютером")}</span>
                 <Num ms={model.active} />
-                <span className="ov-sub">видео без ввода {dur(model.watch)} · созвоны {dur(model.call)}</span>
+                <span className="ov-sub">{t("видео без ввода {w} · созвоны {c}", { w: dur(model.watch), c: dur(model.call) })}</span>
               </div>
               <button type="button" className="ov-card ov-sorted" onClick={() => go({ screen: "unsorted" })} disabled={none < 60_000}>
-                <span className="ov-label">Без проекта</span>
+                <span className="ov-label">{t("Без проекта")}</span>
                 <Num ms={none} />
                 <span className="ov-sub">
                   {none >= 60_000 ? (
                     <>
-                      разобрать <ArrowRight size={13} />
+                      {t("разобрать")} <ArrowRight size={13} />
                     </>
                   ) : (
-                    "всё разобрано"
+                    t("всё разобрано")
                   )}
                 </span>
               </button>
@@ -146,7 +149,7 @@ function MonthDays({ days, onOpen }: { days: Day[]; onOpen: (day: number) => voi
   return (
     <section className="card mon-days">
       <header className="card-head">
-        <span>По дням</span>
+        <span>{t("По дням")}</span>
         <span className="mon-legend">
           {KINDS.map((k) => (
             <span key={k}>
@@ -161,7 +164,7 @@ function MonthDays({ days, onOpen }: { days: Day[]; onOpen: (day: number) => voi
           const wd = new Date(d.day).getDay();
           const parts = KINDS.map((k) => [k, d.by.get(k) ?? 0] as const).filter(([, ms]) => ms > 0);
           const none = d.by.get(null) ?? 0;
-          const tip = [...parts.map(([k, ms]) => `${KIND_LABEL[k]} ${dur(ms)}`), none ? `без проекта ${dur(none)}` : ""].filter(Boolean).join(" · ");
+          const tip = [...parts.map(([k, ms]) => `${KIND_LABEL[k]} ${dur(ms)}`), none ? t("без проекта {d}", { d: dur(none) }) : ""].filter(Boolean).join(" · ");
           return (
             <button
               key={d.day}
@@ -211,7 +214,7 @@ function MonthWeeks({ days }: { days: Day[] }) {
   return (
     <section className="card mon-weeks">
       <header className="card-head">
-        <span>По неделям</span>
+        <span>{t("По неделям")}</span>
       </header>
       {weeks.map((w) => (
         <div key={w.w} className="mon-week">
@@ -228,9 +231,9 @@ function MonthWeeks({ days }: { days: Day[] }) {
             </span>
           </span>
           <span className="mon-week-work">
-            <b>{dur(w.by.get("work") ?? 0)}</b> работы
+            {tj("{h} работы", { h: <b>{dur(w.by.get("work") ?? 0)}</b> })}
           </span>
-          <span className="mon-week-rest">досуг {dur(w.by.get("leisure") ?? 0)}</span>
+          <span className="mon-week-rest">{t("досуг {d}", { d: dur(w.by.get("leisure") ?? 0) })}</span>
         </div>
       ))}
     </section>
@@ -254,7 +257,7 @@ function MonthProjects({ model, prev, projects, onOpen }: { model: Model; prev: 
   return (
     <section className="card mon-projects">
       <header className="card-head">
-        <span>Проекты</span>
+        <span>{t("Проекты")}</span>
         <div className="card-head-right">
           <div className="segmented segmented-sm">
             {KINDS.map((k) => (
@@ -265,7 +268,7 @@ function MonthProjects({ model, prev, projects, onOpen }: { model: Model; prev: 
           </div>
         </div>
       </header>
-      {rows.length === 0 && <div className="empty">За этот месяц здесь ничего</div>}
+      {rows.length === 0 && <div className="empty">{t("За этот месяц здесь ничего")}</div>}
       {(all ? rows : rows.slice(0, LIMIT)).map(([id, ms]) => {
         const p = projects.get(id)!;
         const before = prev?.byProject.get(id) ?? 0;
@@ -279,17 +282,17 @@ function MonthProjects({ model, prev, projects, onOpen }: { model: Model; prev: 
             </span>
             <b>{dur(ms)}</b>
             <span className="mon-pdiff" data-tone={!compare ? undefined : before < 30 * 60_000 ? "new" : diff >= 0 ? "up" : "down"}>
-              {!compare ? "" : before < 30 * 60_000 ? "новый" : Math.abs(diff) < 30 * 60_000 ? "≈" : `${diff > 0 ? "+" : "−"}${dur(Math.abs(diff))}`}
+              {!compare ? "" : before < 30 * 60_000 ? t("новый") : Math.abs(diff) < 30 * 60_000 ? "≈" : `${diff > 0 ? "+" : "−"}${dur(Math.abs(diff))}`}
             </span>
           </button>
         );
       })}
       {rows.length > LIMIT && (
         <button type="button" className="mon-gone rg-more" onClick={() => setAll((a) => !a)}>
-          {all ? "Свернуть" : `Ещё ${rows.length - LIMIT}: ${dur(rows.slice(LIMIT).reduce((n, [, ms]) => n + ms, 0))}`}
+          {all ? t("Свернуть") : t("Ещё {n}: {d}", { n: rows.length - LIMIT, d: dur(rows.slice(LIMIT).reduce((n, [, ms]) => n + ms, 0)) })}
         </button>
       )}
-      {gone > 0 && <div className="mon-gone">в прошлом месяце были ещё {gone}, в этом их нет</div>}
+      {gone > 0 && <div className="mon-gone">{t("в прошлом месяце были ещё {n}, в этом их нет", { n: gone })}</div>}
     </section>
   );
 }
@@ -300,7 +303,7 @@ function MonthSummary({ model, prev, projects, from, days }: { model: Model; pre
   const h = (ms: number) => +(ms / HOUR).toFixed(1);
 
   const payload = () => {
-    const kinds = (m: Model) => Object.fromEntries([...kindTotals(m.byProject, projects)].map(([k, ms]) => [k ? KIND_LABEL[k] : "Без проекта", h(ms)]));
+    const kinds = (m: Model) => Object.fromEntries([...kindTotals(m.byProject, projects)].map(([k, ms]) => [k ? KIND_LABEL[k] : t("Без проекта"), h(ms)]));
     const longest = [...model.sessions].sort((a, b) => b.active - a.active)[0];
     return {
       period: "месяц",
@@ -316,14 +319,14 @@ function MonthSummary({ model, prev, projects, from, days }: { model: Model; pre
       ...rhythmFacts(days, projects),
       highlights: {
         ...highlightFacts(days, projects),
-        longestSession: longest ? { title: longest.label, project: projects.get(longest.projectId ?? "")?.name ?? null, hours: h(longest.active), date: new Date(longest.start).toLocaleDateString("ru-RU") } : null,
+        longestSession: longest ? { title: longest.label, project: projects.get(longest.projectId ?? "")?.name ?? null, hours: h(longest.active), date: new Date(longest.start).toLocaleDateString(locale()) } : null,
       },
     };
   };
 
   return (
     <section className="card mon-ai">
-      <AiSummaryBody id={`month:${from}`} payload={payload} empty="Claude напишет, на что ушёл месяц и что изменилось" />
+      <AiSummaryBody id={`month:${from}`} payload={payload} empty={t("Claude напишет, на что ушёл месяц и что изменилось")} />
     </section>
   );
 }

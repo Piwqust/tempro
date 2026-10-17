@@ -1,10 +1,16 @@
 // "Kind of activity" from ActivityWatch's own categories (Work / Media / Comms …), imported with its settings.
+import { t } from "../lib/i18n";
 import type { Segment } from "./types";
 
 export type AwCategory = { name: string[]; regex: string; ignoreCase: boolean };
 
-const LABEL: Record<string, string> = { Work: "Работа", Media: "Медиа", Comms: "Общение" };
-export const CATEGORY_COLOR: Record<string, string> = { Работа: "#2F6BFF", Медиа: "#E5408A", Общение: "#16A06A", Прочее: "#9a9a9a" };
+const LABEL: Record<string, string> = { Work: t("Работа"), Media: t("Медиа"), Comms: t("Общение") };
+export const CATEGORY_COLOR: Record<string, string> = {
+  [t("Работа")]: "#2F6BFF",
+  [t("Медиа")]: "#E5408A",
+  [t("Общение")]: "#16A06A",
+  [t("Прочее")]: "#9a9a9a",
+};
 
 export type Categorizer = (app: string, title: string) => string;
 
@@ -34,7 +40,7 @@ export function compileCategories(list: AwCategory[]): Categorizer {
   const rules = [...aw, ...BUILT_IN.map(compile).filter((r): r is NonNullable<typeof r> => !!r)];
   return (app, title) => {
     for (const r of rules) if (r.re.test(title) || r.re.test(app)) return LABEL[r.top] ?? r.top;
-    return "Прочее";
+    return t("Прочее");
   };
 }
 

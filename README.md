@@ -1,146 +1,254 @@
+<a id="top"></a>
+
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="brand/logo/lockup-dark.svg">
-    <img src="brand/logo/lockup.svg" alt="Tempro" height="64">
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/hero-dark.svg">
+    <img src="docs/assets/hero-light.svg" alt="Tempro: automatic time tracking that knows what you actually did" width="100%">
   </picture>
 </p>
 
 <p align="center">
-  <b>Automatic time tracking for Windows that works out what you actually did.</b><br>
-  It records your day quietly, sorts it into projects and kinds of activity, and shows it by day, week, month, 3 months and year.
+  <a href="https://github.com/Piwqust/tempro/releases/latest"><img src="docs/assets/btn-download.svg" alt="Download for Windows" height="48"></a>
+  &nbsp;
+  <a href="#-take-the-tour"><img src="docs/assets/btn-tour.svg" alt="Take the tour" height="48"></a>
+  &nbsp;
+  <a href="docs/DEVELOPMENT.md"><img src="docs/assets/btn-docs.svg" alt="Developer docs" height="48"></a>
 </p>
 
 <p align="center">
-  <img alt="Windows 10/11" src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4?logo=windows&logoColor=white">
-  <img alt="Tauri 2" src="https://img.shields.io/badge/Tauri-2-24C8DB?logo=tauri&logoColor=white">
-  <img alt="Rust" src="https://img.shields.io/badge/Rust-stable-000000?logo=rust&logoColor=white">
-  <img alt="React 19" src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black">
-  <img alt="SQLCipher" src="https://img.shields.io/badge/storage-SQLCipher%20AES--256-16A06A">
-  <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-lightgrey">
+  <a href="https://github.com/Piwqust/tempro/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/Piwqust/tempro/ci.yml?branch=main&style=for-the-badge&label=tests&labelColor=14151C&color=16A06A"></a>
+  <a href="https://github.com/Piwqust/tempro/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/Piwqust/tempro?style=for-the-badge&labelColor=14151C&color=FF5A1F&label=release"></a>
+  <img alt="Windows 10 and 11" src="https://img.shields.io/badge/Windows-10%20%7C%2011-2F6BFF?style=for-the-badge&labelColor=14151C&logo=windows&logoColor=white">
+  <img alt="Languages" src="https://img.shields.io/badge/UI-English%20%7C%20Русский-8B5CF6?style=for-the-badge&labelColor=14151C">
+  <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-8A8FA3?style=for-the-badge&labelColor=14151C"></a>
 </p>
-
-> **Based on [ActivityWatch](https://activitywatch.net), reworked for my own needs.** ActivityWatch tells you which windows were open. I wanted to know what work I actually did, so Tempro takes the same idea further: it automatically figures out the project, the kind of activity and the real working time behind every window. See [Origins](#origins).
 
 <p align="center">
-  <img src="docs/screenshots/day.png" alt="Day view: totals, Claude summary, timeline by kind of activity" width="100%">
+  <b><a href="#-take-the-tour">Tour</a></b> ·
+  <b><a href="#-what-it-does">Features</a></b> ·
+  <b><a href="#-how-it-compares">Compare</a></b> ·
+  <b><a href="#-privacy-first">Privacy</a></b> ·
+  <b><a href="#-install">Install</a></b> ·
+  <b><a href="#-how-it-works">How it works</a></b> ·
+  <b><a href="#-faq">FAQ</a></b>
 </p>
 
-<sub>The interface is in Russian for now. Every screenshot comes from the built-in demo mode with made-up data.</sub>
+<br>
 
-## Why
+> [!NOTE]
+> **Based on [ActivityWatch](https://activitywatch.net), reworked for my own needs.** ActivityWatch tells you which windows were open. I wanted to know *what work I actually did*, so Tempro takes the same idea further: it works out the project, the kind of activity and the real working time behind every window, on its own. [Read the story ↓](#-origins)
 
-Most trackers either want you to press start and stop, or record every window and leave you with thousands of titles to sort. Tempro records in the background, decides which project each moment belongs to and whether it was work at all, and shows an honest total. Install it, forget about it, come back a month later and see where the time went.
+## ✦ Take the tour
 
-## Features
+<p align="center">
+  <img src="docs/assets/tour.gif" alt="Day, week, month, 3 months, year and the date picker" width="100%">
+</p>
 
-**Records by itself**
-- The active window through Windows events (no once-a-second polling), browser tabs through a small extension, Claude Code sessions, audio and microphone, screen lock and sleep.
-- Five states instead of "active / AFK": working, watching a video without input, on a call, short pause, away. A video you're watching doesn't count as absence.
-- Keyboard and mouse are only counted per minute, never captured.
-- Lives in the tray for weeks: starts with Windows, a Task Scheduler watchdog brings it back after a crash, background jobs keep running while the window is hidden.
+<p align="center"><sub>Day → Week → Month → 3 months → Year → date picker. Built-in demo mode, made-up data.</sub></p>
 
-**Sorts into projects by itself**
-- Projects come from window titles, Figma files, editor folders, tab addresses, Telegram chats and coding-agent folders.
-- Correct it once and a rule is saved; the whole history is recomputed on the spot.
-- Every project has a kind: work, leisure, personal or utility. "8 hours at the computer" becomes "5 hours of work and 2 hours of YouTube".
-- Project icons are picked automatically from the name and rules, or chosen by hand.
-- Optional AI (Claude, or a local Ollama model) names sessions in plain words, sorts what's left and suggests new projects.
+## ✦ What it does
 
-**Shows what matters**
+<table>
+  <tr>
+    <td width="33%" valign="top">
+      <img src="docs/assets/f-record.svg" width="44" alt=""><br>
+      <b>Records by itself</b><br>
+      <sub>The active window through Windows events, browser tabs, Claude Code sessions, audio and microphone. Five states instead of "active / AFK": a video you watch is not absence.</sub>
+    </td>
+    <td width="33%" valign="top">
+      <img src="docs/assets/f-sort.svg" width="44" alt=""><br>
+      <b>Sorts itself</b><br>
+      <sub>Projects from Figma files, editor folders, tab addresses, chats. Correct it once, a rule is saved and the whole history is recomputed. Icons are picked automatically.</sub>
+    </td>
+    <td width="33%" valign="top">
+      <img src="docs/assets/f-periods.svg" width="44" alt=""><br>
+      <b>From a day to a year</b><br>
+      <sub>Day, week, month, 3 months and year, a calendar with presets and density, keyboard navigation, heat maps, rhythm and highlights.</sub>
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">
+      <img src="docs/assets/f-ai.svg" width="44" alt=""><br>
+      <b>Writes the summary</b><br>
+      <sub>Optional Claude or local Ollama: a headline for the day, the main work, rhythm, leisure, what changed against last time. In English or Russian.</sub>
+    </td>
+    <td valign="top">
+      <img src="docs/assets/f-privacy.svg" width="44" alt=""><br>
+      <b>Private by default</b><br>
+      <sub>AES-256 encrypted database, a password for the log or the whole window, details wiped after 30 days, nothing leaves your computer.</sub>
+    </td>
+    <td valign="top">
+      <img src="docs/assets/f-tray.svg" width="44" alt=""><br>
+      <b>Set and forget</b><br>
+      <sub>Starts with Windows, lives in the tray, a watchdog brings it back after a crash, background jobs keep running for weeks with the window hidden.</sub>
+    </td>
+  </tr>
+</table>
+
+### Every period, its own answer
+
+| | |
+|:---:|:---:|
+| <img src="docs/screenshots/day.png" alt="Day"> | <img src="docs/screenshots/week.png" alt="Week"> |
+| **Day.** The timeline by kind of activity, a Claude summary, sessions, *"you were away for 15 min, what was it?"* | **Week.** Each day as a stack of work, leisure, personal and utility, change against last week |
+| <img src="docs/screenshots/month.png" alt="Month"> | <img src="docs/screenshots/quarter.png" alt="3 months"> |
+| **Month.** By day and week, projects with their change, *When* and *Highlights* | **3 months.** Three heat-map calendars, weekly bars, comparison with the 3 months before |
+| <img src="docs/screenshots/year-dark.png" alt="Year"> | <img src="docs/screenshots/year-details-dark.png" alt="Year in detail"> |
+| **Year.** A whole year of work on one map | **Projects, rhythm and highlights** for the year: your busiest hours and weekdays |
+
+<details>
+<summary><b>More screens</b>: date picker, project page, right-click menu, settings</summary>
+<br>
+
+| | |
+|:---:|:---:|
+| <img src="docs/screenshots/picker.png" alt="Date picker"> | <img src="docs/screenshots/project.png" alt="Project page"> |
+| **Calendar in the title**: presets, days tinted by hours of work | **Project page**: days, rules, icon, hourly rate |
+| <img src="docs/screenshots/context-menu.png" alt="Right-click menu"> | <img src="docs/screenshots/settings.png" alt="Settings"> |
+| **Its own right-click menu** with actions for what's under the cursor | **Settings**: language, recording, AI, password, data |
+
+</details>
+
+### Move through time from the keyboard
 
 | | |
 |---|---|
-| ![Week](docs/screenshots/week.png) | ![Month](docs/screenshots/month.png) |
-| **Week**: each day as a stack of activity kinds, change against last week | **Month**: by day and week, projects with their change, rhythm and highlights |
-| ![3 months](docs/screenshots/quarter.png) | ![Year](docs/screenshots/year-dark.png) |
-| **3 months**: three heat-map calendars and weekly bars | **Year**: a whole year of work on one map, by month, compared with last year |
+| <kbd>←</kbd> <kbd>→</kbd> or <kbd>[</kbd> <kbd>]</kbd> | previous / next day, week, month, 3 months or year |
+| <kbd>T</kbd> | back to the current period |
+| <kbd>D</kbd> <kbd>W</kbd> <kbd>M</kbd> <kbd>Q</kbd> <kbd>Y</kbd> | day, week, month, 3 months, year (physical keys, any layout) |
+| <kbd>Ctrl</kbd> + <kbd>L</kbd> | lock the window |
+| <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>T</kbd> | anywhere in Windows: *I'm working on…* |
 
-- A day timeline grouped by kind of activity and expandable to projects, drawn as density instead of flickering stripes.
-- *When*: the hours and weekdays you really work. *Highlights*: busiest day, best week, longest session, working streak, new projects.
-- An AI summary with a headline and points (main work, rhythm, leisure, what changed) built from real details, not generic phrases.
-- CSV export for Excel: sessions, hours per day and project, hourly rates.
+## ✦ How it compares
 
-| | |
-|---|---|
-| ![Date picker](docs/screenshots/picker.png) | ![Year in detail](docs/screenshots/year-details-dark.png) |
-| **Calendar in the title**: presets, days tinted by hours of work | **Projects, rhythm and highlights** for the year |
-| ![Project page](docs/screenshots/project.png) | ![Right-click menu](docs/screenshots/context-menu.png) |
-| **Project page**: days, rules, icon, hourly rate | **Its own right-click menu** instead of the browser's |
+| | **Tempro** | ActivityWatch | Start/stop timers |
+|---|:---:|:---:|:---:|
+| Records without you doing anything | ✅ | ✅ | ❌ |
+| Projects as first-class things | ✅ | ❌ categories only | ✅ typed by hand |
+| Learns from your corrections, recomputes history | ✅ | ❌ | ❌ |
+| Work / leisure / personal, not just "active" | ✅ | ❌ | ❌ |
+| Video and calls don't count as absence | ✅ | ❌ | — |
+| Reports from a day to a year, with comparisons | ✅ | partly | ✅ |
+| Encrypted database, password lock | ✅ | ❌ | depends |
+| Everything stays on your computer | ✅ | ✅ | often cloud |
+| Platforms | Windows | Windows, macOS, Linux | many |
 
-**Fast date navigation**
+<sub>ActivityWatch is a great open-source project and works on every desktop OS; Tempro is narrower and more opinionated. Comparison as of October 2026.</sub>
 
-| Key | Action |
-|---|---|
-| `←` `→` or `[` `]` | previous / next day, week, month, 3 months or year |
-| `T` | back to the current period |
-| `D` `W` `M` `Q` `Y` | day, week, month, 3 months, year (by physical key, so any layout works) |
-| `Ctrl+L` | lock the window |
-| `Ctrl+Alt+T` | anywhere in Windows: "I'm working on…" |
+## ✦ Privacy first
 
-## Privacy
+<img src="docs/screenshots/lock-dark.png" alt="Lock screen" width="46%" align="right">
 
 Tempro sees everything you do at the computer, so the data is protected by default.
 
-<img src="docs/screenshots/lock-dark.png" alt="Lock screen" width="48%" align="right">
-
-- **The database is encrypted** with SQLCipher (AES-256). The key is 32 random bytes in Windows Credential Manager, tied to your Windows account; without it the file is noise.
-- **A password for the log or the whole window.** Recording continues; looking at the data needs the password. The window locks again when it's hidden or when Windows locks. A forgotten password is cleared with the database recovery key.
-- **Details are kept for 30 days** (configurable). After that, window titles and addresses are wiped from disk; the app, the time and the project stay.
-- **Nothing leaves your computer.** The local server listens on `127.0.0.1` only and accepts tabs only from its own extension. AI is off by default; when enabled, only window titles and minutes are sent, and the API key lives in Credential Manager.
-- Key presses are only counted; query strings are stripped from addresses; private browser windows are ignored; words and apps on your hide list are blanked before they're stored.
+- 🔐 **Encrypted** with SQLCipher (AES-256). The key lives in Windows Credential Manager, tied to your account.
+- 🔒 **Password** for the log or the whole window. It locks again when the window hides or Windows locks. Forgot it? The recovery key clears it.
+- 🧹 **Details expire** after 30 days (configurable): titles and addresses are wiped, totals stay.
+- 🏠 **Local only.** The server listens on `127.0.0.1`. AI is off by default; when on, only titles and minutes are sent.
+- ⌨️ Keys are **counted, never captured**; query strings are stripped; private windows ignored.
 
 <br clear="right">
 
-## Install
+## ✦ Install
 
-**Installer:** download `Tempro_x.y.z_x64-setup.exe` from [Releases](../../releases) and run it. Tempro installs per user into `%LOCALAPPDATA%\Tempro`, shows up in the Start menu and Windows search, starts with Windows and sits in the tray.
+1. **Download** `Tempro_x.y.z_x64-setup.exe` from [**Releases**](https://github.com/Piwqust/tempro/releases/latest) and run it.
+2. Tempro installs for your user (no admin rights), appears in the **Start menu** and **Windows search**, starts with Windows and sits in the tray.
+3. Optional: the [browser extension](extension/) for tab addresses and video, and an AI key in *Settings → AI*.
 
-**From source:** you need Rust (MSVC toolchain), Bun and the Visual Studio C++ Build Tools.
+**Coming from ActivityWatch?** Tempro finds its database and imports the whole history, categories included.
 
-```
+<details>
+<summary><b>Build from source</b></summary>
+<br>
+
+You need Rust (MSVC), Bun and the Visual Studio C++ Build Tools.
+
+```powershell
 git clone https://github.com/Piwqust/tempro.git
 cd tempro
 powershell -ExecutionPolicy Bypass -File scripts\release.ps1
 ```
 
-Demo mode, tests and the architecture are described in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
+Want to look around without installing? `cd app && bun install && bun run dev`, then open `http://localhost:1420/?demo&lang=en`. Everything else: [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
-**Browser extension** (tab addresses and video): open `edge://extensions` or `chrome://extensions`, turn on developer mode, "Load unpacked", pick the [extension/](extension/) folder.
+</details>
 
-**Coming from ActivityWatch:** Tempro finds its database and imports the whole history, categories included.
+## ✦ How it works
 
-## How it works
-
+```mermaid
+flowchart LR
+    subgraph Windows
+        W[Active window<br>& title]
+        I[Input counters]
+        A[Audio & mic]
+        L[Lock & sleep]
+    end
+    E[Browser<br>extension] --> R
+    C[Claude Code<br>sessions] --> R
+    W & I & A & L --> R[Rust core<br>Tauri 2]
+    R --> DB[(SQLCipher<br>raw events,<br>append-only)]
+    DB --> EN[TypeScript engine<br>states · projects · sessions]
+    RU[Your rules &<br>corrections] --> EN
+    EN --> UI[React UI<br>day → year]
+    EN -.optional.-> AI[Claude / Ollama<br>names & summaries]
 ```
-Windows: windows, input, audio, sleep ─┐
-Browser extension ─────────────────────┼─► Rust (Tauri 2) ─► SQLCipher: raw events, append-only
-Claude Code sessions ──────────────────┘                                │
-                                                                        ▼
-            React + TypeScript: the engine derives states, projects and sessions from raw events,
-            again whenever the rules change; long periods are reduced to daily totals month by month
-```
 
-- **Rust:** Windows sensors, storage, encryption, watchdog, password, AI requests.
-- **TypeScript:** all of the computation (`app/src/engine`, covered by tests), one code path for the app window, the browser and the demo mode.
-- Projects, rules and settings live in the same encrypted database.
+- **Raw events are never rewritten.** Projects, states and sessions are computed on top, so a new rule instantly re-sorts your whole history.
+- **One engine everywhere.** The same TypeScript code runs in the app window, the browser and the demo mode, and is covered by tests.
+- **Long periods stay light.** A year is computed month by month and reduced to daily totals, never held in memory as raw events.
 
-## Origins
+## ✦ Origins
 
-Tempro started as my replacement for [ActivityWatch](https://activitywatch.net). I used ActivityWatch for months and like its core idea: record the active window and idle time, and keep everything on your own machine. But it answers "which apps were open", and my question was "what work did I do today, for which project, and how much of it was real work". Tempro keeps ActivityWatch's approach to collecting data and can import its database, and adds what I was missing: projects as first-class things, automatic sorting that learns from corrections, kinds of activity, video and calls that don't count as absence, encryption, and reports for long periods. It is a separate application written from scratch in Rust and TypeScript, not affiliated with the ActivityWatch project.
+Tempro started as my replacement for [ActivityWatch](https://activitywatch.net). I used it for months and like its core idea: record the active window and idle time, and keep everything on your own machine. But it answers *"which apps were open"*, and my question was *"what work did I do today, for which project, and how much of it was real work"*.
 
-## Limitations
+So I reworked the idea for my own needs. Tempro keeps ActivityWatch's way of collecting data and can import its database, and adds what I was missing: projects as first-class things, sorting that learns from corrections, kinds of activity, video and calls that don't count as absence, encryption, and reports for long periods. It is a separate application written from scratch in Rust and TypeScript, not affiliated with the ActivityWatch project.
 
-- Windows 10 and 11 only.
-- The interface is in Russian for now.
-- Summaries and auto-sorting need the Claude API (or a compatible proxy) or a local Ollama; everything else works without them.
+## ✦ FAQ
 
-## Documentation
+<details>
+<summary><b>Does it record my keystrokes or take screenshots?</b></summary>
+<br>
+No. Input is counted per minute (how many keys, clicks, scrolls), never what you typed. Screen text recognition exists for apps whose title never changes, is off by default, and even then keeps only the text, never the image.
+</details>
 
-- [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md): build, tests, layout, decisions
-- [docs/05-design.md](docs/05-design.md): interface principles, tokens, screens
-- [docs/02-detection-methods.md](docs/02-detection-methods.md): where the signals come from and how they become states
-- [docs/01-activitywatch-analysis.md](docs/01-activitywatch-analysis.md): how ActivityWatch works and what Tempro changes
+<details>
+<summary><b>Do I need the AI?</b></summary>
+<br>
+No. Recording, sorting by rules, all reports and exports work without it. The AI only names sessions, suggests projects for unsorted time and writes summaries. It can run locally through Ollama.
+</details>
 
-## License
+<details>
+<summary><b>What happens if I reinstall Windows?</b></summary>
+<br>
+The database key is tied to your Windows account. Save the recovery key from <i>Settings → Data</i> in your password manager; with it, the database opens again.
+</details>
 
-[MIT](LICENSE)
+<details>
+<summary><b>macOS or Linux?</b></summary>
+<br>
+Not at the moment: the sensors use Windows APIs directly. The engine and the interface are platform-independent, so a port is possible.
+</details>
+
+<details>
+<summary><b>Can I export my data?</b></summary>
+<br>
+Yes: CSV for Excel (sessions, hours by day and project, rates) from the week, month, 3-month, year and project screens.
+</details>
+
+## ✦ Star history
+
+<p align="center">
+  <a href="https://star-history.com/#Piwqust/tempro&Date">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=Piwqust/tempro&type=Date&theme=dark">
+      <img alt="Star history" src="https://api.star-history.com/svg?repos=Piwqust/tempro&type=Date" width="600">
+    </picture>
+  </a>
+</p>
+
+---
+
+<p align="center">
+  <picture><source media="(prefers-color-scheme: dark)" srcset="brand/logo/mark-dark.svg"><img src="brand/logo/mark.svg" width="28" alt=""></picture><br>
+  <sub>Made with Rust, Tauri and React · <a href="LICENSE">MIT license</a> · <a href="docs/DEVELOPMENT.md">Developer docs</a> · <a href="#top">Back to top ↑</a></sub>
+</p>

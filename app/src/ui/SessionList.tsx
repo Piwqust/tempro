@@ -1,8 +1,9 @@
 import { Eye, Phone, Sparkles } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { assign } from "../data/assign";
 import type { Project, Session } from "../engine/types";
-import { clock, dayNum, dur, startOfDay, weekday } from "../lib/time";
+import { t } from "../lib/i18n";
+import { clock, dur, startOfDay, weekdayDate } from "../lib/time";
 import { AppIcon } from "./bits";
 import { Popover } from "./Popover";
 import { ProjectPicker } from "./ProjectPicker";
@@ -20,9 +21,7 @@ type Props = {
   empty?: string;
 };
 
-const MONTH = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
-
-export function SessionList({ sessions, projects, selected, onSelect, grouped, titles, dayTotal, empty = "Пока пусто" }: Props) {
+export function SessionList({ sessions, projects, selected, onSelect, grouped, titles, dayTotal, empty = t("Пока пусто") }: Props) {
   if (!sessions.length) return <div className="empty">{empty}</div>;
 
   const groups: { day: number; items: Session[]; ms: number }[] = [];
@@ -42,7 +41,7 @@ export function SessionList({ sessions, projects, selected, onSelect, grouped, t
           {grouped && (
             <div className="sl-day">
               <span>
-                {weekday(g.day)}, {dayNum(g.day)} {MONTH[new Date(g.day).getMonth()]}
+                {weekdayDate(g.day)}
               </span>
               <span>{dur(dayTotal ? dayTotal(g.day) : g.ms)}</span>
             </div>
@@ -101,8 +100,8 @@ function SessionRow({ s, project, title, selected, onSelect }: { s: Session; pro
           {title && <Sparkles size={11} className="sl-ai" />}
         </span>
         <span className="sl-meta">
-          <span className="sl-project" style={project ? { color: project.color } : undefined}>
-            {project?.name ?? "Без проекта"}
+          <span className="sl-project" data-c={project ? "" : undefined} style={project ? ({ "--c": project.color } as CSSProperties) : undefined}>
+            {project?.name ?? t("Без проекта")}
           </span>
           <AppIcon app={s.app} size={14} />
           {extra.map((a) => (
@@ -122,7 +121,7 @@ function SessionRow({ s, project, title, selected, onSelect }: { s: Session; pro
               setPicking(true);
             }}
           >
-            {project ? `Проект: ${project.name} — изменить` : "Указать проект"}
+            {project ? t("Проект: {name} — изменить", { name: project.name }) : t("Указать проект")}
           </button>
         )}
       </span>
@@ -135,7 +134,7 @@ function SessionRow({ s, project, title, selected, onSelect }: { s: Session; pro
               assign(id, s.app, s.label);
               setPicking(false);
             }}
-            footer={<span>Правило: «{s.label}» → проект. История пересчитается.</span>}
+            footer={<span>{t("Правило: «{label}» → проект. История пересчитается.", { label: s.label })}</span>}
           />
         </div>
       </Popover>

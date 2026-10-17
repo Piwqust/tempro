@@ -1,3 +1,4 @@
+import { t } from "../lib/i18n";
 import { agentFolder, appName, extractContext, isAgentHost, isBrowser, isVideo, tabContext } from "./context";
 import type { Matcher } from "./rules";
 import type { AgentSpan, Manual, Model, Question, RawEvents, RawWindow, Segment, SegmentState, Session, State, StateSpan } from "./types";
@@ -292,13 +293,13 @@ function applyManual(segments: Segment[], manual: Manual[], from: number, until:
     }
   }
   const covered = merge(segments);
-  const label: Record<string, string> = { meeting: "Встреча", call: "Звонок", other: "Другое" };
+  const label: Record<string, string> = { meeting: t("Встреча"), call: t("Звонок"), other: t("Другое") };
   for (const m of manual) {
     if (m.kind === "break" || m.kind === "focus") continue;
     const s = Math.max(from, m.start);
     const e = Math.min(until, m.end);
     if (e <= s) continue;
-    const name = m.note || label[m.kind] || "Отметка";
+    const name = m.note || label[m.kind] || t("Отметка");
     for (const iv of cut(s, e, covered).outside) {
       segments.push({ start: iv.start, end: iv.end, app: "manual", title: name, context: name, projectId: m.projectId, state: "manual", manual: true });
     }
@@ -323,7 +324,7 @@ function agentLane(agents: NonNullable<RawEvents["agent"]>, from: number, until:
     out.push({
       start,
       end,
-      folder: folder || "без папки",
+      folder: folder || t("без папки"),
       path: a.cwd,
       entry: a.entry,
       projectId: match({ app: "agent", title: "", context: folder, path: a.cwd })?.projectId ?? null,

@@ -5,6 +5,7 @@ import { useStore } from "../data/store";
 import { useModel } from "../data/useModel";
 import { KIND_LABEL, KINDS, kindOf } from "../engine/rules";
 import { addDays, dur, startOfDay } from "../lib/time";
+import { t } from "../lib/i18n";
 import { GRAN_KEY, GRAN_LABEL, GRANS, screenOf } from "../lib/period";
 import { useNav, type Screen } from "../nav";
 import { GRAN_ICON } from "./PeriodBar";
@@ -45,9 +46,9 @@ export function Sidebar() {
     <aside className="sidebar">
       <div className="brand">
         <Logo />
-        <span className="rec" data-on={recording || undefined} title={recording ? "Данные приходят" : status?.paused ? "Запись на паузе" : "Нет свежих данных"}>
+        <span className="rec" data-on={recording || undefined} title={recording ? t("Данные приходят") : status?.paused ? t("Запись на паузе") : t("Нет свежих данных")}>
           <span className="rec-dot" />
-          {recording ? "запись" : "пауза"}
+          {recording ? t("запись") : t("пауза")}
         </span>
       </div>
 
@@ -59,18 +60,18 @@ export function Sidebar() {
         ))}
         <span className="sb-gap" />
         <Item screen="unsorted" icon={<Inbox size={16} strokeWidth={1.75} />} badge={unassigned > 60_000 ? dur(unassigned) : undefined}>
-          Неразобранное
+          {t("Неразобранное")}
         </Item>
         <Item screen="projects" icon={<FolderKanban size={16} strokeWidth={1.75} />}>
-          Проекты
+          {t("Проекты")}
         </Item>
       </nav>
 
       <Focus />
 
       <div className="sb-section">
-        <span className="sb-title">Сегодня по проектам</span>
-        {busy.length === 0 && <span className="sb-empty">Пока ничего не разнесено</span>}
+        <span className="sb-title">{t("Сегодня по проектам")}</span>
+        {busy.length === 0 && <span className="sb-empty">{t("Пока ничего не разнесено")}</span>}
         {KINDS.map((k) => {
           const list = busy.filter((p) => kindOf(p) === k);
           if (!list.length) return null;
@@ -99,23 +100,23 @@ export function Sidebar() {
         <nav className="sb-nav">
           {has && (
             <Item screen="journal" icon={<ScrollText size={16} strokeWidth={1.75} />}>
-              Журнал
+              {t("Журнал")}
             </Item>
           )}
           <Item screen="settings" icon={<Settings size={16} strokeWidth={1.75} />}>
-            Настройки
+            {t("Настройки")}
           </Item>
           {lock.status.set && (
-            <button type="button" className="sb-item" onClick={() => void lock.lock()} title="Заблокировать  Ctrl+L">
+            <button type="button" className="sb-item" onClick={() => void lock.lock()} title={t("Заблокировать") + "  Ctrl+L"}>
               <Lock size={16} strokeWidth={1.75} />
-              <span className="truncate">Заблокировать</span>
+              <span className="truncate">{t("Заблокировать")}</span>
             </button>
           )}
         </nav>
         {has === false && (
           <div className="source">
-            <span className="source-title">Только история ActivityWatch</span>
-            <span className="source-sub">бэкенд Tempro не запущен</span>
+            <span className="source-title">{t("Только история ActivityWatch")}</span>
+            <span className="source-sub">{t("бэкенд Tempro не запущен")}</span>
           </div>
         )}
       </div>

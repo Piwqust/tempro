@@ -1,4 +1,5 @@
 import type { Screen } from "../nav";
+import { getLang, t } from "./i18n";
 import { addDays, addMonths, DAY, rangeTitle, startOfDay, startOfMonth, startOfWeek } from "./time";
 
 /** How long a stretch the screen shows. "quarter" is three months ending with the picked one,
@@ -6,7 +7,7 @@ import { addDays, addMonths, DAY, rangeTitle, startOfDay, startOfMonth, startOfW
 export type Gran = "day" | "week" | "month" | "quarter" | "year";
 
 export const GRANS: Gran[] = ["day", "week", "month", "quarter", "year"];
-export const GRAN_LABEL: Record<Gran, string> = { day: "День", week: "Неделя", month: "Месяц", quarter: "3 месяца", year: "Год" };
+export const GRAN_LABEL: Record<Gran, string> = { day: t("День"), week: t("Неделя"), month: t("Месяц"), quarter: t("3 месяца"), year: t("Год") };
 export const GRAN_KEY: Record<Gran, string> = { day: "d", week: "w", month: "m", quarter: "q", year: "y" };
 
 const SCREEN: Record<Gran, Screen> = { day: "today", week: "week", month: "month", quarter: "quarter", year: "year" };
@@ -54,16 +55,19 @@ export function step(g: Gran, day: number, n: number, now = Date.now()): number 
 
 export const isCurrent = (g: Gran, day: number, now = Date.now()) => now < period(g, day).to;
 
-const MONTH_SHORT = ["янв", "фев", "мар", "апр", "май", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"];
-export const monthShort = (t: number) => MONTH_SHORT[new Date(t).getMonth()];
+const MONTH_SHORT_RU = ["янв", "фев", "мар", "апр", "май", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"];
+const MONTH_SHORT_EN = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const MONTH_SHORT = () => (getLang() === "en" ? MONTH_SHORT_EN : MONTH_SHORT_RU);
+export const monthShort = (t: number) => MONTH_SHORT()[new Date(t).getMonth()];
 
 export function periodTitle(g: Gran, from: number, to: number): string {
   const a = new Date(from);
   const b = new Date(to - 1);
   if (g === "year") return String(a.getFullYear());
   if (g === "quarter") {
-    const left = MONTH_SHORT[a.getMonth()] + (a.getFullYear() !== b.getFullYear() ? ` ${a.getFullYear()}` : "");
-    return `${left} – ${MONTH_SHORT[b.getMonth()]} ${b.getFullYear()}`.replace(/^./, (c) => c.toUpperCase());
+    const M = MONTH_SHORT();
+    const left = M[a.getMonth()] + (a.getFullYear() !== b.getFullYear() ? ` ${a.getFullYear()}` : "");
+    return `${left} – ${M[b.getMonth()]} ${b.getFullYear()}`.replace(/^./, (c) => c.toUpperCase());
   }
   return rangeTitle(from, to);
 }

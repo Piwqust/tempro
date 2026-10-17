@@ -4,6 +4,7 @@ import { actions, useStore } from "../data/store";
 import { KIND_COLOR, KIND_LABEL, KINDS, kindOf } from "../engine/rules";
 import type { Project } from "../engine/types";
 import { useModel } from "../data/useModel";
+import { t } from "../lib/i18n";
 import { addDays, dur, HOUR, startOfDay } from "../lib/time";
 import { useNav } from "../nav";
 import { TopBar } from "../ui/TopBar";
@@ -51,7 +52,7 @@ export function Projects() {
         <span className="ptable-name">
           <ProjectIcon project={p} size={22} />
           <span className="truncate">{p.name}</span>
-          {p.rate ? <span className="ptable-rate">{p.rate} ₽/ч</span> : null}
+          {p.rate ? <span className="ptable-rate">{t("{rate} ₽/ч", { rate: p.rate })}</span> : null}
         </span>
         <span className="spark" style={{ "--c": p.color } as CSSProperties}>
           {(st?.days ?? new Array(DAYS).fill(0)).map((ms, i) => (
@@ -70,14 +71,14 @@ export function Projects() {
     <>
       <TopBar
         icon={<FolderKanban size={14} strokeWidth={1.9} />}
-        section="Проекты"
+        section={t("Проекты")}
         right={
           <div className="segmented">
             <button type="button" data-on={!showArchived || undefined} onClick={() => setShowArchived(false)}>
-              Активные
+              {t("Активные")}
             </button>
             <button type="button" data-on={showArchived || undefined} onClick={() => setShowArchived(true)}>
-              Архив
+              {t("Архив")}
             </button>
           </div>
         }
@@ -85,11 +86,11 @@ export function Projects() {
       <div className="screen">
         <section className="card ptable">
           <div className="ptable-head">
-            <span>Проект</span>
-            <span>30 дней по дням</span>
-            <span className="num">7 дней</span>
-            <span className="num">30 дней</span>
-            <span className="num">Правил</span>
+            <span>{t("Проект")}</span>
+            <span>{t("30 дней по дням")}</span>
+            <span className="num">{t("7 дней")}</span>
+            <span className="num">{t("30 дней")}</span>
+            <span className="num">{t("Правил")}</span>
             <span />
           </div>
           {KINDS.flatMap((k) => {
@@ -106,7 +107,7 @@ export function Projects() {
               ...group.map((p) => row(p)),
             ];
           })}
-          {list.length === 0 && <div className="empty">{showArchived ? "Архив пуст" : "Проектов нет"}</div>}
+          {list.length === 0 && <div className="empty">{showArchived ? t("Архив пуст") : t("Проектов нет")}</div>}
           {!showArchived && (
             <form
               className="ptable-new"
@@ -120,12 +121,12 @@ export function Projects() {
               }}
             >
               <Plus size={16} strokeWidth={1.7} />
-              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Новый проект — название и Enter" />
+              <input value={name} onChange={(e) => setName(e.target.value)} placeholder={t("Новый проект — название и Enter")} />
             </form>
           )}
         </section>
         <p className="hint page-hint">
-          Время попадает в проект по правилам: слово в заголовке, адресе вкладки, папке или тексте с экрана. Правила и цвет — на странице проекта.
+          {t("Время попадает в проект по правилам: слово в заголовке, адресе вкладки, папке или тексте с экрана. Правила и цвет — на странице проекта.")}
         </p>
       </div>
     </>

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, typ
 import { appName } from "../engine/context";
 import { KIND_COLOR, KIND_LABEL, KINDS, kindOf } from "../engine/rules";
 import type { Model, Project, ProjectKind, Segment, Session, StateSpan } from "../engine/types";
+import { t } from "../lib/i18n";
 import { clock, dur, HOUR, MIN } from "../lib/time";
 import { AppIcon } from "./bits";
 import { ProjectIcon } from "./ProjectIcon";
@@ -45,12 +46,12 @@ const CELL_PX = 3;
 const MIN_SPAN = 2 * HOUR;
 
 const STATE_NAME: Record<StateSpan["state"], string> = {
-  work: "Работа",
-  watch: "Видео без ввода",
-  call: "Созвон",
-  pause: "Пауза",
-  away: "Отошёл",
-  off: "Нет данных",
+  work: t("Работа"),
+  watch: t("Видео без ввода"),
+  call: t("Созвон"),
+  pause: t("Пауза"),
+  away: t("Отошёл"),
+  off: t("Нет данных"),
 };
 
 function fitRange(model: Model, now: number): [number, number] {
@@ -292,7 +293,7 @@ export function DayTimeline({ model, projects, visible, selected, onSelect, titl
   const colorOf = (r: Row) =>
     r.type === "project" ? (projects.get(r.lane.id!)?.color ?? "var(--none)") : r.kind ? KIND_COLOR[r.kind] : "var(--none)";
   const nameOf = (r: Row) =>
-    r.type === "project" ? (projects.get(r.lane.id!)?.name ?? "") : r.type === "more" ? `ещё ${r.count}` : r.kind ? KIND_LABEL[r.kind] : "Без проекта";
+    r.type === "project" ? (projects.get(r.lane.id!)?.name ?? "") : r.type === "more" ? t("ещё {n}", { n: r.count }) : r.kind ? KIND_LABEL[r.kind] : t("Без проекта");
 
   // agent spans of one project, merged: Claude Code writes a line every few seconds
   const agentBlocks = useMemo(() => {
@@ -347,20 +348,20 @@ export function DayTimeline({ model, projects, visible, selected, onSelect, titl
   return (
     <section className="dtl card">
       <header className="dtl-head">
-        <span className="dtl-title">День</span>
+        <span className="dtl-title">{t("День")}</span>
         <div className="segmented segmented-sm">
           <button type="button" data-on={mode === "fit" || undefined} onClick={() => setMode("fit")}>
-            Активное время
+            {t("Активное время")}
           </button>
           <button type="button" data-on={mode === "day" || undefined} onClick={() => setMode("day")}>
-            24 часа
+            {t("24 часа")}
           </button>
         </div>
         <div className="dtl-zoom">
-          <button type="button" className="icon-btn icon-btn-sm" title="Отдалить (Ctrl + колесо)" onClick={() => zoom(1.5)}>
+          <button type="button" className="icon-btn icon-btn-sm" title={t("Отдалить (Ctrl + колесо)")} onClick={() => zoom(1.5)}>
             <Minus size={15} strokeWidth={1.7} />
           </button>
-          <button type="button" className="icon-btn icon-btn-sm" title="Приблизить (Ctrl + колесо)" onClick={() => zoom(1 / 1.5)}>
+          <button type="button" className="icon-btn icon-btn-sm" title={t("Приблизить (Ctrl + колесо)")} onClick={() => zoom(1 / 1.5)}>
             <Plus size={15} strokeWidth={1.7} />
           </button>
         </div>
@@ -383,7 +384,7 @@ export function DayTimeline({ model, projects, visible, selected, onSelect, titl
                   data-none={!r.kind || undefined}
                   disabled={!can}
                   onClick={() => can && toggle(r.kind!)}
-                  title={can ? (r.open ? "Свернуть проекты" : `Показать проекты: ${r.count}`) : undefined}
+                  title={can ? (r.open ? t("Свернуть проекты") : t("Показать проекты: {n}", { n: r.count })) : undefined}
                 >
                   {can ? <ChevronRight size={13} strokeWidth={2} className="dtl-chev" /> : <span className="dtl-chev" />}
                   <span className="truncate">{nameOf(r)}</span>
@@ -394,7 +395,7 @@ export function DayTimeline({ model, projects, visible, selected, onSelect, titl
             if (r.type === "more") {
               return (
                 <button key={r.key} type="button" className="dtl-label" data-type="more" onClick={() => setAll((x) => ({ ...x, [r.kind]: !r.all }))}>
-                  <span className="truncate">{r.all ? "свернуть мелкие" : `ещё ${r.count}`}</span>
+                  <span className="truncate">{r.all ? t("свернуть мелкие") : t("ещё {n}", { n: r.count })}</span>
                   {!r.all && <span className="dtl-label-num">{dur(r.lane.total)}</span>}
                 </button>
               );
@@ -409,16 +410,16 @@ export function DayTimeline({ model, projects, visible, selected, onSelect, titl
           })}
           {agentBlocks.length > 0 && (
             <div className="dtl-label dtl-label-sub">
-              <span className="truncate">Агенты Claude Code</span>
+              <span className="truncate">{t("Агенты Claude Code")}</span>
             </div>
           )}
           {bars && (
             <div className="dtl-label dtl-label-sub">
-              <span className="truncate">Ввод</span>
+              <span className="truncate">{t("Ввод")}</span>
             </div>
           )}
           <div className="dtl-label dtl-label-sub">
-            <span className="truncate">Присутствие</span>
+            <span className="truncate">{t("Присутствие")}</span>
           </div>
         </div>
 
@@ -537,7 +538,7 @@ export function DayTimeline({ model, projects, visible, selected, onSelect, titl
             </span>
           );
         })}
-        <span className="dtl-legend-hint">Ctrl + колесо — масштаб, Shift + колесо — сдвиг</span>
+        <span className="dtl-legend-hint">{t("Ctrl + колесо — масштаб, Shift + колесо — сдвиг")}</span>
       </footer>
     </section>
   );
@@ -583,7 +584,7 @@ function HoverCard({ hover, width, head, state, seg, projects, title }: {
       <div className="dtl-tip" style={style}>
         <div className="dtl-tip-head">
           <span className="dot" style={{ background: head?.color ?? "var(--none)", width: 8, height: 8 }} />
-          <b className="truncate">{head?.name ?? "Без проекта"}</b>
+          <b className="truncate">{head?.name ?? t("Без проекта")}</b>
           <span className="dtl-tip-time">
             {clock(b.start)}–{clock(b.end)}
           </span>
@@ -612,7 +613,9 @@ function HoverCard({ hover, width, head, state, seg, projects, title }: {
           ))}
         </div>
         <div className="dtl-tip-foot">
-          {dur(b.active)} в работе{b.end - b.start - b.active > 2 * MIN ? ` из ${dur(b.end - b.start)}, остальное — другое или пауза` : ""}
+          {b.end - b.start - b.active > 2 * MIN
+            ? t("{a} в работе из {b}, остальное — другое или пауза", { a: dur(b.active), b: dur(b.end - b.start) })
+            : t("{a} в работе", { a: dur(b.active) })}
         </div>
       </div>
     );
@@ -622,7 +625,7 @@ function HoverCard({ hover, width, head, state, seg, projects, title }: {
     <div className="dtl-tip dtl-tip-small" style={style}>
       <div className="dtl-tip-head">
         <b>{clock(hover.t)}</b>
-        <span className="dtl-tip-time">{state ? STATE_NAME[state.state] : "нет данных"}</span>
+        <span className="dtl-tip-time">{state ? STATE_NAME[state.state] : t("нет данных")}</span>
       </div>
       {seg && (
         <div className="dtl-tip-ctx">

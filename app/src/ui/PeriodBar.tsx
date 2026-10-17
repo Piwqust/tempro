@@ -5,6 +5,7 @@ import { KIND_COLOR, kindTotals } from "../engine/rules";
 import { useProjects } from "../data/useModel";
 import { GRAN_KEY, GRAN_LABEL, GRANS, isCurrent, monthShort, period, periodTitle, screenOf, startOfYear, step, type Gran } from "../lib/period";
 import { addDays, addMonths, dayNum, dayTitle, dur, monthTitle, startOfDay, startOfMonth, startOfWeek } from "../lib/time";
+import { t } from "../lib/i18n";
 import { useNav } from "../nav";
 import { Popover } from "./Popover";
 import { TopBar } from "./TopBar";
@@ -35,7 +36,7 @@ export function PeriodBar({ gran, right }: { gran: Gran; right?: ReactNode }) {
       nextDisabled={current}
       title={
         <>
-          <button type="button" ref={setAnchor} className="pb-date" data-open={open || undefined} onClick={() => setOpen((o) => !o)} title="Выбрать дату">
+          <button type="button" ref={setAnchor} className="pb-date" data-open={open || undefined} onClick={() => setOpen((o) => !o)} title={t("Выбрать дату")}>
             {title}
             <ChevronDown size={14} />
           </button>
@@ -54,8 +55,8 @@ export function PeriodBar({ gran, right }: { gran: Gran; right?: ReactNode }) {
       right={
         <>
           {!current && (
-            <button type="button" className="btn btn-ghost-white" onClick={() => go({ day: startOfDay(Date.now()) })} title="Сегодня  T">
-              {gran === "day" ? "К сегодня" : "К текущему"}
+            <button type="button" className="btn btn-ghost-white" onClick={() => go({ day: startOfDay(Date.now()) })} title={t("Сегодня  T")}>
+              {gran === "day" ? t("К сегодня") : t("К текущему")}
             </button>
           )}
           {right}
@@ -70,19 +71,19 @@ type Preset = { label: string; gran: Gran; day: number };
 function presets(now: number): Preset[] {
   const today = startOfDay(now);
   return [
-    { label: "Сегодня", gran: "day", day: today },
-    { label: "Вчера", gran: "day", day: addDays(today, -1) },
-    { label: "Эта неделя", gran: "week", day: today },
-    { label: "Прошлая неделя", gran: "week", day: addDays(startOfWeek(today), -7) },
-    { label: "Этот месяц", gran: "month", day: today },
-    { label: "Прошлый месяц", gran: "month", day: addMonths(today, -1) },
-    { label: "Последние 3 месяца", gran: "quarter", day: today },
-    { label: "Этот год", gran: "year", day: today },
-    { label: "Прошлый год", gran: "year", day: new Date(new Date(today).getFullYear() - 1, 0, 1).getTime() },
+    { label: t("Сегодня"), gran: "day", day: today },
+    { label: t("Вчера"), gran: "day", day: addDays(today, -1) },
+    { label: t("Эта неделя"), gran: "week", day: today },
+    { label: t("Прошлая неделя"), gran: "week", day: addDays(startOfWeek(today), -7) },
+    { label: t("Этот месяц"), gran: "month", day: today },
+    { label: t("Прошлый месяц"), gran: "month", day: addMonths(today, -1) },
+    { label: t("Последние 3 месяца"), gran: "quarter", day: today },
+    { label: t("Этот год"), gran: "year", day: today },
+    { label: t("Прошлый год"), gran: "year", day: new Date(new Date(today).getFullYear() - 1, 0, 1).getTime() },
   ];
 }
 
-const WD = ["пн", "вт", "ср", "чт", "пт", "сб", "вс"];
+const WD = [t("пн"), t("вт"), t("ср"), t("чт"), t("пт"), t("сб"), t("вс")];
 
 /** Presets on the left; on the right a month of days (day, week) or a year of months (longer
  *  periods), each tinted by how much work it held, so the busy stretches are visible before
@@ -133,18 +134,18 @@ function DatePicker({ gran, day, onPick }: { gran: Gran; day: number; onPick: (g
           );
         })}
         <span className="dp-keys">
-          ← → листать · T сегодня
+          {t("← → листать · T сегодня")}
           <br />
-          {GRANS.map((g) => GRAN_KEY[g].toUpperCase()).join(" ")} — день … год
+          {t("{keys} — день … год", { keys: GRANS.map((g) => GRAN_KEY[g].toUpperCase()).join(" ") })}
         </span>
       </div>
       <div className="dp-cal">
         <header className="dp-head">
-          <button type="button" className="icon-btn" onClick={() => setView(byMonth ? new Date(new Date(view).getFullYear() - 1, 0, 1).getTime() : addMonths(view, -1))} aria-label="Раньше">
+          <button type="button" className="icon-btn" onClick={() => setView(byMonth ? new Date(new Date(view).getFullYear() - 1, 0, 1).getTime() : addMonths(view, -1))} aria-label={t("Раньше")}>
             <ChevronLeft size={16} />
           </button>
           <span>{byMonth ? new Date(view).getFullYear() : monthTitle(view)}</span>
-          <button type="button" className="icon-btn" disabled={viewEnd > now} onClick={() => setView(byMonth ? viewEnd : addMonths(view, 1))} aria-label="Позже">
+          <button type="button" className="icon-btn" disabled={viewEnd > now} onClick={() => setView(byMonth ? viewEnd : addMonths(view, 1))} aria-label={t("Позже")}>
             <ChevronRight size={16} />
           </button>
         </header>
@@ -156,32 +157,32 @@ function DatePicker({ gran, day, onPick }: { gran: Gran; day: number; onPick: (g
           </div>
         )}
         <div className="dp-grid" data-months={byMonth || undefined} onPointerLeave={() => setHover(null)}>
-          {cells.map((t) => {
-            const future = t > today;
-            const out = !byMonth && (t < view || t >= addMonths(view, 1));
-            const ms = work.get(t) ?? 0;
+          {cells.map((c) => {
+            const future = c > today;
+            const out = !byMonth && (c < view || c >= addMonths(view, 1));
+            const ms = work.get(c) ?? 0;
             return (
               <button
-                key={t}
+                key={c}
                 type="button"
                 className="dp-cell"
                 disabled={future}
                 data-out={out || undefined}
-                data-today={(byMonth ? t === startOfMonth(today) : t === today) || undefined}
-                data-sel={inside(t, sel) || undefined}
-                data-pre={inside(t, pre) || undefined}
+                data-today={(byMonth ? c === startOfMonth(today) : c === today) || undefined}
+                data-sel={inside(c, sel) || undefined}
+                data-pre={inside(c, pre) || undefined}
                 style={{ "--l": level(ms), "--c": KIND_COLOR.work } as CSSProperties}
-                title={ms ? `работа ${dur(ms)}` : undefined}
-                onPointerEnter={() => !future && setHover(t)}
-                onClick={() => pick(t)}
+                title={ms ? t("работа {d}", { d: dur(ms) }) : undefined}
+                onPointerEnter={() => !future && setHover(c)}
+                onClick={() => pick(c)}
               >
                 {byMonth ? (
                   <>
-                    <b>{monthShort(t)}</b>
+                    <b>{monthShort(c)}</b>
                     <small>{ms ? dur(ms) : ""}</small>
                   </>
                 ) : (
-                  dayNum(t)
+                  dayNum(c)
                 )}
               </button>
             );

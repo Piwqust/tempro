@@ -2,6 +2,7 @@ import { Coffee, Phone, Users, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { useBackend, useManual } from "../data/backend";
 import type { ManualKind, Question } from "../engine/types";
+import { t } from "../lib/i18n";
 import { clock, dur } from "../lib/time";
 import { Popover } from "./Popover";
 import { ProjectPicker } from "./ProjectPicker";
@@ -53,22 +54,22 @@ function QuestionRow({ q, onSkip }: { q: Question; onSkip: () => void }) {
   return (
     <div className="question card">
       <div className="question-text">
-        <span className="question-title">Тебя не было {dur(q.end - q.start)}</span>
+        <span className="question-title">{t("Тебя не было {d}", { d: dur(q.end - q.start) })}</span>
         <span className="muted">
-          {clock(q.start)} – {clock(q.end)} · что это было?
+          {t("{from} – {to} · что это было?", { from: clock(q.start), to: clock(q.end) })}
         </span>
       </div>
       <div className="question-actions">
         <button ref={meeting} type="button" className="btn btn-ghost-white" onClick={() => setPick({ kind: "meeting", anchor: meeting.current! })}>
-          <Users size={15} /> Встреча
+          <Users size={15} /> {t("Встреча")}
         </button>
         <button ref={callBtn} type="button" className="btn btn-ghost-white" onClick={() => setPick({ kind: "call", anchor: callBtn.current! })}>
-          <Phone size={15} /> Звонок
+          <Phone size={15} /> {t("Звонок")}
         </button>
         <button type="button" className="btn btn-ghost-white" onClick={() => answer("break", null)}>
-          <Coffee size={15} /> Перерыв
+          <Coffee size={15} /> {t("Перерыв")}
         </button>
-        <button type="button" className="icon-btn" title="Не спрашивать" onClick={onSkip}>
+        <button type="button" className="icon-btn" title={t("Не спрашивать")} onClick={onSkip}>
           <X size={16} />
         </button>
       </div>
@@ -81,7 +82,7 @@ function QuestionRow({ q, onSkip }: { q: Question; onSkip: () => void }) {
           }}
           footer={
             <button type="button" className="link" onClick={() => (pick && answer(pick.kind, null), setPick(null))}>
-              Без проекта
+              {t("Без проекта")}
             </button>
           }
         />

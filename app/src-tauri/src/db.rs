@@ -233,6 +233,8 @@ pub struct Settings {
     /// window titles, tab addresses and screen text older than this many days are wiped;
     /// projects and minutes stay. 0 = keep everything
     pub detail_days: u64,
+    /// interface language: auto | ru | en (tray menu, messages, AI answers)
+    pub lang: String,
 }
 
 impl Default for Settings {
@@ -257,6 +259,7 @@ impl Default for Settings {
             question_minutes: 15,
             hotkey: "Ctrl+Alt+T".into(),
             detail_days: 30,
+            lang: "auto".into(),
         }
     }
 }
@@ -512,7 +515,12 @@ pub fn journal(conn: &Connection, limit: i64) -> rusqlite::Result<Vec<Value>> {
         Ok(())
     };
     q("SELECT id, ts, dur, app, title, source FROM raw_window ORDER BY ts DESC LIMIT ?1", "window")?;
-    q("SELECT id, ts, dur, CASE afk WHEN 1 THEN 'отошёл' ELSE 'на месте' END, kind, source FROM raw_afk ORDER BY ts DESC LIMIT ?1", "afk")?;
+    let afk = format!(
+        "SELECT id, ts, dur, CASE afk WHEN 1 THEN '{}' ELSE '{}' END, kind, source FROM raw_afk ORDER BY ts DESC LIMIT ?1",
+        crate::i18n::tr("отошёл", "away"),
+        crate::i18n::tr("на месте", "here")
+    );
+    q(&afk, "afk")?;
     q("SELECT id, ts, dur, kind, app, 'tempro' FROM raw_media ORDER BY ts DESC LIMIT ?1", "media")?;
     q("SELECT id, ts, dur, browser, url, 'extension' FROM raw_browser ORDER BY ts DESC LIMIT ?1", "browser")?;
     q("SELECT id, ts, 0.0, app, substr(text, 1, 160), 'ocr' FROM raw_ocr ORDER BY ts DESC LIMIT ?1", "ocr")?;

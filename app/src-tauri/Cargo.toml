@@ -1,6 +1,6 @@
 [package]
 name = "tempro"
-version = "0.3.1"
+version = "0.4.0"
 description = "Tempro: automatic time tracker"
 authors = ["Tempro"]
 edition = "2024"

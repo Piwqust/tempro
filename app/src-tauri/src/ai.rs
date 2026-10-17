@@ -14,7 +14,7 @@ fn ask(s: &Settings, system: &str, user: &str, schema: Value) -> Result<Value, S
     match s.ai_provider.as_str() {
         "claude" => claude(s, system, user, schema),
         "ollama" => ollama(s, system, user, schema),
-        _ => Err("ИИ выключен. Включи Ollama или Claude в настройках.".into()),
+        _ => Err(crate::i18n::tr("ИИ выключен. Включи Ollama или Claude в настройках.", "AI is off. Turn on Ollama or Claude in Settings.").into()),
     }
 }
 
@@ -35,8 +35,8 @@ fn json_in(text: &str) -> Result<Value, String> {
     }
     let (a, b) = (text.find('{'), text.rfind('}'));
     match (a, b) {
-        (Some(a), Some(b)) if b > a => serde_json::from_str(&text[a..=b]).map_err(|e| format!("Ответ не JSON: {e}")),
-        _ => Err("Ответ не JSON".into()),
+        (Some(a), Some(b)) if b > a => serde_json::from_str(&text[a..=b]).map_err(|e| format!("{}: {e}", crate::i18n::tr("Ответ не JSON", "Not JSON"))),
+        _ => Err(crate::i18n::tr("Ответ не JSON", "Not JSON").into()),
     }
 }
 
@@ -55,7 +55,7 @@ fn post(url: &str, key: &str, body: &Value, extra: &[(&str, &str)]) -> Result<(u
         .timeout_global(Some(std::time::Duration::from_secs(180)))
         .build()
         .send_json(body)
-        .map_err(|e| format!("API недоступен ({url}): {e}"))?;
+        .map_err(|e| format!("{} ({url}): {e}", crate::i18n::tr("API недоступен", "API unreachable")))?;
     let status = resp.status().as_u16();
     let text = resp.body_mut().read_to_string().map_err(|e| e.to_string())?;
     let v = serde_json::from_str(&text).unwrap_or_else(|_| json!({"raw": text.chars().take(300).collect::<String>()}));
@@ -69,7 +69,7 @@ fn err_text(v: &Value) -> String {
 fn claude(s: &Settings, system: &str, user: &str, schema: Value) -> Result<Value, String> {
     let key = s.ai_key.trim();
     if key.is_empty() {
-        return Err("Нет ключа API в настройках.".into());
+        return Err(crate::i18n::tr("Нет ключа API в настройках.", "No API key in Settings.").into());
     }
     let model = if s.ai_model.trim().is_empty() { CLAUDE_MODEL } else { s.ai_model.trim() };
     let base = base(s);
@@ -126,15 +126,15 @@ fn anthropic(base: &str, key: &str, model: &str, system: &str, user: &str, schem
         return Err((true, format!("API {status}: {}", err_text(&v))));
     }
     match v["stop_reason"].as_str() {
-        Some("max_tokens") => return Err((true, "Ответ модели обрезан: слишком много строк за раз.".into())),
-        Some("refusal") => return Err((true, "Модель отказалась отвечать на этот запрос.".into())),
+        Some("max_tokens") => return Err((true, crate::i18n::tr("Ответ модели обрезан: слишком много строк за раз.", "The model's answer was cut off: too many rows at once.").into())),
+        Some("refusal") => return Err((true, crate::i18n::tr("Модель отказалась отвечать на этот запрос.", "The model declined to answer this request.").into())),
         _ => {}
     }
     let text = v["content"]
         .as_array()
         .and_then(|c| c.iter().find(|b| b["type"] == "text"))
         .and_then(|b| b["text"].as_str())
-        .ok_or((true, "Пустой ответ модели".to_string()))?;
+        .ok_or((true, crate::i18n::tr("Пустой ответ модели", "Empty answer from the model").to_string()))?;
     json_in(text).map_err(|e| (true, e))
 }
 
@@ -159,7 +159,7 @@ fn openai(base: &str, key: &str, model: &str, system: &str, user: &str, schema: 
     if status != 200 {
         return Err((true, format!("API {status}: {}", err_text(&v))));
     }
-    let text = v["choices"][0]["message"]["content"].as_str().ok_or((true, "Пустой ответ модели".to_string()))?;
+    let text = v["choices"][0]["message"]["content"].as_str().ok_or((true, crate::i18n::tr("Пустой ответ модели", "Empty answer from the model").to_string()))?;
     json_in(text).map_err(|e| (true, e))
 }
 
@@ -181,10 +181,10 @@ fn ollama(s: &Settings, system: &str, user: &str, schema: Value) -> Result<Value
         "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
     });
     let url = format!("{}/api/chat", s.ollama_url.trim_end_matches('/'));
-    let mut resp = ureq::post(&url).send_json(&body).map_err(|e| format!("Ollama не отвечает ({url}): {e}"))?;
+    let mut resp = ureq::post(&url).send_json(&body).map_err(|e| format!("{} ({url}): {e}", crate::i18n::tr("Ollama не отвечает", "Ollama is not responding")))?;
     let v: Value = resp.body_mut().read_json().map_err(|e| e.to_string())?;
-    let text = v["message"]["content"].as_str().ok_or("Пустой ответ Ollama")?;
-    serde_json::from_str(text).map_err(|e| format!("Ответ не JSON: {e}"))
+    let text = v["message"]["content"].as_str().ok_or(crate::i18n::tr("Пустой ответ Ollama", "Empty answer from Ollama"))?;
+    serde_json::from_str(text).map_err(|e| format!("{}: {e}", crate::i18n::tr("Ответ не JSON", "Not JSON")))
 }
 
 /// `items`: [{id, app, title, minutes}], `projects`: [{id, name, hints}]
@@ -232,7 +232,14 @@ pub fn summary(s: &Settings, day: &Value) -> Result<Value, String> {
             "Это период «{period}». headline — суть периода одной фразой до 70 знаков.              points — 4–5 пунктов с label из одного-двух слов: «Главное» (сколько работы, 2–3 главных проекта),              «Сдвиги» (что выросло или упало к прошлому такому же периоду: previousByKind или previousMonthByKind, previous у проектов;              если сравнения нет, этот пункт пропусти), «Ритм» (в какие часы и дни недели работа, самый рабочий день, серия),              «Досуг», «Заметка» (одна деталь из highlights). text каждого пункта до 180 знаков."
         )
     };
-    let system = format!("{voice} {task}");
+    // the page says which language it shows; the settings decide when it doesn't
+    let english = day["lang"].as_str().map(|l| l == "en").unwrap_or_else(crate::i18n::en);
+    let lang = if english {
+        " Write everything in English instead of Russian: the headline, the labels (Main, Rhythm, Leisure, Shifts, Note) and the texts. Hours like \"2.5 h\", minutes like \"40 min\", times like \"09:40\"."
+    } else {
+        ""
+    };
+    let system = format!("{voice} {task}{lang}");
     let schema = json!({
         "type": "object",
         "properties": {
@@ -259,6 +266,11 @@ pub fn titles(s: &Settings, sessions: &Value) -> Result<Value, String> {
         Придумай название на русском, 2–6 слов, про одно главное дело: «Макет лендинга Aurora в Figma», «Переписка с Kite Studio», «Релиз Nimbus 2.0». \
         Не перечисляй через запятые и «и»: выбери то, на что ушло больше минут, остальное отбрось. \
         Только факты из заголовков, без оценок и выдумок. Имена файлов, папок и проектов оставляй как есть.";
+    let system = if crate::i18n::en() {
+        format!("{system} Write the titles in English, 2–6 words, e.g. \"Aurora landing page in Figma\".")
+    } else {
+        system.to_string()
+    };
     let schema = json!({
         "type": "object",
         "properties": {"titles": {"type": "array", "items": {
@@ -270,7 +282,7 @@ pub fn titles(s: &Settings, sessions: &Value) -> Result<Value, String> {
         "required": ["titles"],
         "additionalProperties": false
     });
-    Ok(ask(s, system, &json!({"sessions": sessions}).to_string(), schema)?["titles"].clone())
+    Ok(ask(s, &system, &json!({"sessions": sessions}).to_string(), schema)?["titles"].clone())
 }
 
 #[cfg(test)]

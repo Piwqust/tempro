@@ -165,7 +165,7 @@ fn handle(state: &AppState, w: &mut Writer, live: &mut Live, msg: Msg, now: f64)
 pub fn run_import(state: &AppState) -> Value {
     let path = crate::aw::default_db_path();
     if !path.exists() {
-        let v = json!({"state": "none", "message": "База ActivityWatch не найдена"});
+        let v = json!({"state": "none", "message": crate::i18n::tr("База ActivityWatch не найдена", "ActivityWatch database not found")});
         state.status.lock().unwrap().import = v.clone();
         return v;
     }

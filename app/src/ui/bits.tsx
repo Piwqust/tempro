@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 import { useAppIconUrl } from "../data/icons";
 import { appName } from "../engine/context";
 import type { Project } from "../engine/types";
+import { t } from "../lib/i18n";
 import { durParts } from "../lib/time";
 import { ProjectIcon } from "./ProjectIcon";
 
@@ -38,7 +39,7 @@ export function Dot({ color, size = 8 }: { color?: string; size?: number }) {
 }
 
 export function ProjectTag({ project }: { project: Project | undefined }) {
-  if (!project) return <span className="tag tag-none">Без проекта</span>;
+  if (!project) return <span className="tag tag-none">{t("Без проекта")}</span>;
   return (
     <span className="tag" style={{ "--c": project.color } as CSSProperties}>
       <ProjectIcon project={project} size={14} />

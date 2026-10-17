@@ -1,5 +1,6 @@
 // What document / tab / chat the window shows, extracted from the title.
 // This is the strongest project signal we have until the browser extension exists.
+import { t } from "../lib/i18n";
 
 const APP_NAMES: Record<string, string> = {
   "msedge.exe": "Edge",
@@ -18,14 +19,14 @@ const APP_NAMES: Record<string, string> = {
   "deadlock.exe": "Deadlock",
   "discord.exe": "Discord",
   "orca.exe": "Orca",
-  "explorer.exe": "Проводник",
-  "windowsterminal.exe": "Терминал",
+  "explorer.exe": t("Проводник"),
+  "windowsterminal.exe": t("Терминал"),
   "obsidian.exe": "Obsidian",
   "notion.exe": "Notion",
   "spotify.exe": "Spotify",
   "steam.exe": "Steam",
   "steamwebhelper.exe": "Steam",
-  "lockapp.exe": "Экран блокировки",
+  "lockapp.exe": t("Экран блокировки"),
   "mpc-hc64.exe": "MPC-HC",
   "vlc.exe": "VLC",
   "blender.exe": "Blender",

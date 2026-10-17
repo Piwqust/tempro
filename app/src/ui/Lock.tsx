@@ -5,6 +5,7 @@ import { KeyRound, Lock as LockIcon } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { call } from "../data/api";
 import { useBackend } from "../data/backend";
+import { t } from "../lib/i18n";
 import { Logo } from "./Logo";
 
 export type LockStatus = { set: boolean; journal: boolean; app: boolean; unlocked: boolean };
@@ -79,7 +80,7 @@ export function UnlockForm({ title, hint }: { title: string; hint: string }) {
     try {
       if (forgot) await reset(pw);
       else if (!(await unlock(pw))) {
-        setErr("Неверный пароль");
+        setErr(t("Неверный пароль"));
         setPw("");
       }
     } catch (x) {
@@ -92,21 +93,21 @@ export function UnlockForm({ title, hint }: { title: string; hint: string }) {
   return (
     <form className="unlock" onSubmit={submit}>
       <span className="unlock-icon">{forgot ? <KeyRound size={20} /> : <LockIcon size={20} />}</span>
-      <h2>{forgot ? "Сброс пароля" : title}</h2>
-      <p>{forgot ? "Вставь ключ восстановления базы, тот, что сохранял из «Настройки → Данные». Пароль снимется." : hint}</p>
+      <h2>{forgot ? t("Сброс пароля") : title}</h2>
+      <p>{forgot ? t("Вставь ключ восстановления базы, тот, что сохранял из «Настройки → Данные». Пароль снимется.") : hint}</p>
       <input
         ref={input}
         className="field"
         type={forgot ? "text" : "password"}
         value={pw}
         onChange={(e) => setPw(e.target.value)}
-        placeholder={forgot ? "64 знака: 0–9 и a–f" : "Пароль"}
+        placeholder={forgot ? t("64 знака: 0–9 и a–f") : t("Пароль")}
         autoComplete="off"
         spellCheck={false}
       />
       {err && <span className="unlock-err">{err}</span>}
       <button type="submit" className="btn btn-primary" disabled={!pw || busy}>
-        {busy ? "Проверяю…" : forgot ? "Снять пароль" : "Открыть"}
+        {busy ? t("Проверяю…") : forgot ? t("Снять пароль") : t("Открыть")}
       </button>
       <button
         type="button"
@@ -117,7 +118,7 @@ export function UnlockForm({ title, hint }: { title: string; hint: string }) {
           setErr(null);
         }}
       >
-        {forgot ? "Я вспомнил пароль" : "Забыл пароль"}
+        {forgot ? t("Я вспомнил пароль") : t("Забыл пароль")}
       </button>
     </form>
   );
@@ -131,7 +132,7 @@ export function LockScreen() {
       <div className="lockscreen-brand">
         <Logo />
       </div>
-      <UnlockForm title="Tempro заблокирован" hint="Запись идёт как обычно. Чтобы посмотреть данные, введи пароль." />
+      <UnlockForm title={t("Tempro заблокирован")} hint={t("Запись идёт как обычно. Чтобы посмотреть данные, введи пароль.")} />
     </div>
   );
 }

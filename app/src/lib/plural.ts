@@ -1,4 +1,4 @@
-/** Russian plural: plural(5, "сессия", "сессии", "сессий") → "сессий". */
+/** Russian plural only: plural(5, "сессия", "сессии", "сессий") → "сессий". Interface text uses pl() from i18n. */
 export function plural(n: number, one: string, few: string, many: string): string {
   const m10 = n % 10;
   const m100 = n % 100;

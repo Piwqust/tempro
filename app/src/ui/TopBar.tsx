@@ -1,5 +1,6 @@
 import { ArrowLeft, ArrowRight, ChevronRight } from "lucide-react";
 import type { ReactNode } from "react";
+import { t } from "../lib/i18n";
 
 type Props = {
   icon: ReactNode;
@@ -16,10 +17,10 @@ export function TopBar({ icon, section, title, onPrev, onNext, nextDisabled, rig
     <header className="topbar">
       {(onPrev || onNext) && (
         <div className="topbar-arrows">
-          <button type="button" className="icon-btn" onClick={onPrev} aria-label="Назад" title="Назад  [">
+          <button type="button" className="icon-btn" onClick={onPrev} aria-label={t("Назад")} title={t("Назад") + "  ["}>
             <ArrowLeft size={18} strokeWidth={1.6} />
           </button>
-          <button type="button" className="icon-btn" onClick={onNext} disabled={nextDisabled} aria-label="Вперёд" title="Вперёд  ]">
+          <button type="button" className="icon-btn" onClick={onNext} disabled={nextDisabled} aria-label={t("Вперёд")} title={t("Вперёд") + "  ]"}>
             <ArrowRight size={18} strokeWidth={1.6} />
           </button>
         </div>

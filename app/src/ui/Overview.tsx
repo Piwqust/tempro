@@ -4,6 +4,7 @@ import { useSettings } from "../data/backend";
 import { appName } from "../engine/context";
 import { KIND_COLOR, KIND_LABEL, KINDS, kindOf, kindTotals } from "../engine/rules";
 import type { Model, Project, ProjectKind } from "../engine/types";
+import { locale, t } from "../lib/i18n";
 import { addDays, clock, dur, durParts, HOUR } from "../lib/time";
 import { useDaySums } from "../data/daysum";
 import { AiSummaryBody } from "./AiSummary";
@@ -37,13 +38,13 @@ export function Hero({ model, projects, day }: { model: Model; projects: Map<str
   return (
     <section className="ov">
       <div className="ov-card ov-main">
-        <span className="ov-label">Работа</span>
+        <span className="ov-label">{t("Работа")}</span>
         <Num ms={work} />
-        <span className="ov-sub">{first && last ? `за компьютером ${dur(model.active)} · ${clock(first)} – ${clock(last)}` : "нет активности"}</span>
+        <span className="ov-sub">{first && last ? t("за компьютером {d} · {a} – {b}", { d: dur(model.active), a: clock(first), b: clock(last) }) : t("нет активности")}</span>
       </div>
 
       <button type="button" className="ov-card ov-sorted" onClick={() => go({ screen: "unsorted" })} disabled={none < 60_000}>
-        <span className="ov-label">Разобрано</span>
+        <span className="ov-label">{t("Разобрано")}</span>
         <span className="ov-num">
           {sorted}
           <small>%</small>
@@ -54,18 +55,18 @@ export function Hero({ model, projects, day }: { model: Model; projects: Map<str
         <span className="ov-sub">
           {none >= 60_000 ? (
             <>
-              без проекта {dur(none)} <ArrowRight size={13} />
+              {t("без проекта {d}", { d: dur(none) })} <ArrowRight size={13} />
             </>
           ) : (
-            "всё по проектам"
+            t("всё по проектам")
           )}
         </span>
       </button>
 
       <div className="ov-card">
-        <span className="ov-label">Больше всего в работе</span>
+        <span className="ov-label">{t("Больше всего в работе")}</span>
         {top.length === 0 ? (
-          <span className="ov-sub">рабочих проектов за этот день нет</span>
+          <span className="ov-sub">{t("рабочих проектов за этот день нет")}</span>
         ) : (
           <div className="ov-top">
             {top.map(([id, ms]) => {
@@ -83,7 +84,7 @@ export function Hero({ model, projects, day }: { model: Model; projects: Map<str
             })}
           </div>
         )}
-        {money > 0 && <span className="ov-sub">≈ {Math.round(money).toLocaleString("ru-RU")} ₽ по ставкам</span>}
+        {money > 0 && <span className="ov-sub">{t("≈ {n} ₽ по ставкам", { n: Math.round(money).toLocaleString(locale()) })}</span>}
       </div>
 
       <AiSummary model={model} projects={projects} day={day} />
@@ -118,9 +119,9 @@ function AiSummary({ model, projects, day }: { model: Model; projects: Map<strin
     const last = model.segments.at(-1)?.end;
     return {
       period: "день",
-      date: new Date(day).toLocaleDateString("ru-RU", { weekday: "long", day: "numeric", month: "long" }),
+      date: new Date(day).toLocaleDateString(locale(), { weekday: "long", day: "numeric", month: "long" }),
       activeHours: h(model.active),
-      byKind: Object.fromEntries([...kindTotals(model.byProject, projects)].map(([k, ms]) => [k ? KIND_LABEL[k] : "Без проекта", h(ms)])),
+      byKind: Object.fromEntries([...kindTotals(model.byProject, projects)].map(([k, ms]) => [k ? KIND_LABEL[k] : t("Без проекта"), h(ms)])),
       byProject: ranked.map(([id, ms]) => ({ name: projects.get(id!)?.name, kind: KIND_LABEL[kindOf(projects.get(id!))], hours: h(ms) })),
       workTop: ctx("work"),
       leisureTop: ctx("leisure"),
@@ -139,7 +140,7 @@ function AiSummary({ model, projects, day }: { model: Model; projects: Map<strin
 
   return (
     <div className="ov-card ov-ai" data-full={full || undefined}>
-      <AiSummaryBody id={`day:${day}`} payload={payload} empty="Коротко о дне: главное, ритм, досуг" onFull={setFull} />
+      <AiSummaryBody id={`day:${day}`} payload={payload} empty={t("Коротко о дне: главное, ритм, досуг")} onFull={setFull} />
     </div>
   );
 }
@@ -147,7 +148,7 @@ function AiSummary({ model, projects, day }: { model: Model; projects: Map<strin
 const LIMIT = 10;
 
 /** Projects ranked, with one 100% bar on top: replaces the tall blocks that made "unassigned" look like the main event. */
-export function Breakdown({ totals, projects, active, onToggle, title = "Проекты" }: {
+export function Breakdown({ totals, projects, active, onToggle, title = t("Проекты") }: {
   totals: Map<string | null, number>;
   projects: Map<string, Project>;
   active: string[];
@@ -163,7 +164,7 @@ export function Breakdown({ totals, projects, active, onToggle, title = "Про�
   const keep = (r: [string | null, number], i: number) => open || i < LIMIT || r[0] === null || active.includes(r[0]);
   const shown = rows.filter(keep);
   const hidden = rows.filter((r, i) => !keep(r, i));
-  if (!all) return <section className="card bd"><div className="empty">Нет данных</div></section>;
+  if (!all) return <section className="card bd"><div className="empty">{t("Нет данных")}</div></section>;
 
   return (
     <section className="card bd">
@@ -193,7 +194,7 @@ export function Breakdown({ totals, projects, active, onToggle, title = "Про�
               onClick={() => onToggle(key)}
             >
               <ProjectIcon project={p} size={20} />
-              <span className="bd-name truncate">{p?.name ?? "Без проекта"}</span>
+              <span className="bd-name truncate">{p?.name ?? t("Без проекта")}</span>
               <span className="bd-pct">{pct}%</span>
               <span className="bd-ms">{dur(ms)}</span>
             </button>
@@ -201,7 +202,7 @@ export function Breakdown({ totals, projects, active, onToggle, title = "Про�
         })}
         {hidden.length > 0 && (
           <button type="button" className="bd-more" onClick={() => setOpen((o) => !o)}>
-            {open ? "Свернуть" : `Ещё ${hidden.length} · ${dur(hidden.reduce((n, r) => n + r[1], 0))}`}
+            {open ? t("Свернуть") : t("Ещё {n} · {d}", { n: hidden.length, d: dur(hidden.reduce((n, r) => n + r[1], 0)) })}
           </button>
         )}
       </div>
@@ -230,7 +231,7 @@ export function Kinds({ totals, projects, active, onPick }: {
   return (
     <section className="card bd">
       <header className="card-head">
-        <span>Чем занимался</span>
+        <span>{t("Чем занимался")}</span>
         <span className="muted">{dur(all)}</span>
       </header>
       <div className="bd-rows">
@@ -248,7 +249,7 @@ export function Kinds({ totals, projects, active, onPick }: {
               onClick={() => onPick(on ? [] : idsOf(k))}
             >
               <span className="dot" style={{ background: color, width: 9, height: 9 }} />
-              <span className="bd-name">{k ? KIND_LABEL[k] : "Без проекта"}</span>
+              <span className="bd-name">{k ? KIND_LABEL[k] : t("Без проекта")}</span>
               <span className="bd-meter">
                 <i style={{ width: `${(ms / max) * 100}%`, background: color }} />
               </span>
@@ -282,7 +283,7 @@ export function Leisure({ model, projects, limit = 3 }: { model: Model; projects
   return (
     <section className="card leisure">
       <header className="card-head">
-        <span>Досуг</span>
+        <span>{t("Досуг")}</span>
         <span className="muted">{dur(all)}</span>
       </header>
       <div className="leisure-rows">

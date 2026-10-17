@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useTitles } from "../data/ai";
 import { SHORT_SESSION_MS } from "../engine/compute";
 import { useModel, useProjects } from "../data/useModel";
-import { plural } from "../lib/plural";
+import { pl, t } from "../lib/i18n";
 import { addDays } from "../lib/time";
 import { useNav } from "../nav";
 import { DayTimeline } from "../ui/DayTimeline";
@@ -55,9 +55,9 @@ export function Today() {
             <div className="today-grid">
               <section className="card today-sessions">
                 <header className="card-head">
-                  <span>Сессии</span>
+                  <span>{t("Сессии")}</span>
                   <span className="muted">
-                    {longCount} {plural(longCount, "сессия", "сессии", "сессий")}
+                    {longCount} {pl(longCount, ["сессия", "сессии", "сессий"], ["session", "sessions"])}
                   </span>
                   <div className="card-head-right">
                     <FilterBar model={model} compact />
@@ -69,7 +69,7 @@ export function Today() {
                   selected={selected}
                   onSelect={setSelected}
                   titles={titles}
-                  empty={model.sessions.length ? "Под фильтр ничего не попало" : "За этот день нет активности"}
+                  empty={model.sessions.length ? t("Под фильтр ничего не попало") : t("За этот день нет активности")}
                 />
               </section>
               <div className="today-side">

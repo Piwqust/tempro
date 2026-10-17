@@ -54,13 +54,15 @@ pub fn call(state: &AppState, name: &str, args: Value) -> Result<Value, String> 
             } else if !next.ai_key.is_ascii() || next.ai_key.chars().any(|c| c.is_ascii_control() || c == ' ') {
                 // API keys are plain ASCII; anything else is a mangled mask or a paste gone wrong,
                 // and saving it would silently replace a working key
-                return Err("Ключ API может состоять только из латиницы, цифр и знаков без пробелов".into());
+                return Err(crate::i18n::tr("Ключ API может состоять только из латиницы, цифр и знаков без пробелов", "An API key can only contain Latin letters, digits and symbols, without spaces").into());
             } else if next.ai_key != state.settings().ai_key {
                 crate::secrets::set(crate::secrets::AI_KEY, &next.ai_key)?;
             }
             db::save_settings(&state.read.lock().unwrap(), &next).map_err(err)?;
             let hotkey_changed = state.settings().hotkey != next.hotkey;
             *state.settings.write().unwrap() = next.clone();
+            crate::i18n::apply(&next);
+            crate::relabel_tray();
             if hotkey_changed {
                 if let Some(app) = state.app.get() {
                     crate::register_hotkey(app, &next.hotkey);
@@ -91,13 +93,13 @@ pub fn call(state: &AppState, name: &str, args: Value) -> Result<Value, String> 
         ),
         "lock_reset" => crate::lock::reset(&state.read.lock().unwrap(), s(&args, "recovery")),
         "db_key" if !crate::lock::open(&state.read.lock().unwrap()) => Err("locked".into()),
-        "db_key" => crate::secrets::get(crate::secrets::DB_KEY).map(Value::String).ok_or_else(|| "ключа нет".to_string()),
+        "db_key" => crate::secrets::get(crate::secrets::DB_KEY).map(Value::String).ok_or_else(|| crate::i18n::tr("ключа нет", "no key").to_string()),
         "manual_add" => {
             let id = format!("m_{}", (now_ms() as u64).to_string() + &format!("{:04}", rand_suffix()));
             let start = f(&args, "start")?;
             let end = f(&args, "end")?;
             if end <= start {
-                return Err("конец раньше начала".into());
+                return Err(crate::i18n::tr("конец раньше начала", "the end is before the start").into());
             }
             state
                 .read
@@ -160,7 +162,7 @@ pub fn call(state: &AppState, name: &str, args: Value) -> Result<Value, String> 
         }
         "autostart_set" => {
             use tauri_plugin_autostart::ManagerExt;
-            let app = state.app.get().ok_or("приложение не готово")?;
+            let app = state.app.get().ok_or(crate::i18n::tr("приложение не готово", "the app isn't ready"))?;
             let r = if args["enabled"].as_bool().unwrap_or(false) { app.autolaunch().enable() } else { app.autolaunch().disable() };
             r.map_err(|e| e.to_string())?;
             Ok(Value::Null)
@@ -203,7 +205,7 @@ pub fn call(state: &AppState, name: &str, args: Value) -> Result<Value, String> 
         }
         "export_csv" => {
             use tauri_plugin_dialog::DialogExt;
-            let app = state.app.get().ok_or("приложение не готово")?;
+            let app = state.app.get().ok_or(crate::i18n::tr("приложение не готово", "the app isn't ready"))?;
             let Some(path) = app.dialog().file().add_filter("CSV", &["csv"]).set_file_name(s(&args, "name")).blocking_save_file() else {
                 return Ok(json!({"saved": false}));
             };
@@ -213,7 +215,7 @@ pub fn call(state: &AppState, name: &str, args: Value) -> Result<Value, String> 
             Ok(json!({"saved": true, "path": path.display().to_string()}))
         }
         "ocr_now" => {
-            let (hwnd, app, _, _) = crate::sensors::foreground().ok_or("нет активного окна")?;
+            let (hwnd, app, _, _) = crate::sensors::foreground().ok_or(crate::i18n::tr("нет активного окна", "no active window"))?;
             let text = crate::ocr::recognize(hwnd).map_err(|e| e.to_string())?;
             Ok(json!({"app": app, "text": text.chars().take(600).collect::<String>()}))
         }

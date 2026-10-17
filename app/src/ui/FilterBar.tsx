@@ -3,7 +3,7 @@ import { useCallback, useMemo, useRef, useState, type ReactNode } from "react";
 import { appName } from "../engine/context";
 import type { Model } from "../engine/types";
 import { useStore } from "../data/store";
-import { plural } from "../lib/plural";
+import { pl, t } from "../lib/i18n";
 import { dur } from "../lib/time";
 import { useNav } from "../nav";
 import { AppIcon, Dot } from "./bits";
@@ -36,9 +36,9 @@ export function FilterBar({ model, right, compact }: { model: Model | null; righ
     f === "project" ? (
       <Menu
         checkboxes
-        placeholder="Проект…"
+        placeholder={t("Проект…")}
         items={[
-          { id: "__none", label: "Без проекта", icon: <Dot />, checked: nav.projectFilter.includes("__none"), hint: model ? dur(model.byProject.get(null) ?? 0) : undefined },
+          { id: "__none", label: t("Без проекта"), icon: <Dot />, checked: nav.projectFilter.includes("__none"), hint: model ? dur(model.byProject.get(null) ?? 0) : undefined },
           ...projects
             .filter((p) => !p.archived)
             .map((p) => ({ id: p.id, label: p.name, icon: <ProjectIcon project={p} size={16} />, checked: nav.projectFilter.includes(p.id), hint: model ? dur(model.byProject.get(p.id) ?? 0) : undefined })),
@@ -48,7 +48,7 @@ export function FilterBar({ model, right, compact }: { model: Model | null; righ
     ) : (
       <Menu
         checkboxes
-        placeholder="Программа…"
+        placeholder={t("Программа…")}
         items={apps.map(([a, ms]) => ({ id: a, label: appName(a), icon: <AppIcon app={a} size={16} />, checked: nav.appFilter.includes(a), hint: dur(ms) }))}
         onPick={(id) => toggle("app", id)}
       />
@@ -61,21 +61,21 @@ export function FilterBar({ model, right, compact }: { model: Model | null; righ
       v.length === 1
         ? f === "project"
           ? v[0] === "__none"
-            ? "Без проекта"
+            ? t("Без проекта")
             : projects.find((p) => p.id === v[0])?.name ?? "?"
           : appName(v[0])
-        : `${v.length} ${f === "project" ? plural(v.length, "проект", "проекта", "проектов") : plural(v.length, "программа", "программы", "программ")}`;
+        : `${v.length} ${f === "project" ? pl(v.length, ["проект", "проекта", "проектов"], ["project", "projects"]) : pl(v.length, ["программа", "программы", "программ"], ["app", "apps"])}`;
     return (
       <div className="chip" key={f}>
         <span className="chip-seg chip-field">
           {f === "project" ? <FolderKanban size={14} strokeWidth={1.75} /> : <AppWindow size={14} strokeWidth={1.75} />}
-          {f === "project" ? "Проект" : "Программа"}
+          {f === "project" ? t("Проект") : t("Программа")}
         </span>
-        <span className="chip-seg chip-op">{v.length > 1 ? "любой из" : "это"}</span>
+        <span className="chip-seg chip-op">{v.length > 1 ? t("любой из") : t("это")}</span>
         <button type="button" className="chip-seg chip-value" onClick={(e) => setMenu({ anchor: e.currentTarget, field: f })}>
           {name}
         </button>
-        <button type="button" className="chip-seg chip-x" aria-label="Убрать фильтр" onClick={() => setValues(f, [])}>
+        <button type="button" className="chip-seg chip-x" aria-label={t("Убрать фильтр")} onClick={() => setValues(f, [])}>
           <X size={14} />
         </button>
       </div>
@@ -86,7 +86,7 @@ export function FilterBar({ model, right, compact }: { model: Model | null; righ
     <div className={compact ? "filterbar filterbar-compact" : "filterbar"}>
       <button ref={btn} type="button" className={compact ? "btn btn-quiet" : "btn btn-ghost-white"} onClick={() => setMenu({ anchor: btn.current!, field: null })}>
         <ListFilter size={15} strokeWidth={1.75} />
-        Фильтр
+        {t("Фильтр")}
       </button>
       {chip("project")}
       {chip("app")}
@@ -95,10 +95,10 @@ export function FilterBar({ model, right, compact }: { model: Model | null; righ
       <Popover anchor={menu?.anchor ?? null} open={!!menu} onClose={() => setMenu(null)}>
         {menu?.field == null ? (
           <Menu
-            placeholder="Фильтр…"
+            placeholder={t("Фильтр…")}
             items={[
-              { id: "project", label: "Проект", icon: <FolderKanban size={15} strokeWidth={1.75} /> },
-              { id: "app", label: "Программа", icon: <AppWindow size={15} strokeWidth={1.75} /> },
+              { id: "project", label: t("Проект"), icon: <FolderKanban size={15} strokeWidth={1.75} /> },
+              { id: "app", label: t("Программа"), icon: <AppWindow size={15} strokeWidth={1.75} /> },
             ]}
             onPick={(id) => setMenu((m) => (m ? { ...m, field: id as Field } : m))}
           />

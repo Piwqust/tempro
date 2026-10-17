@@ -1,8 +1,9 @@
 // Demo mode (`?demo` in the address): a made-up person's five months, generated in the page, so
 // screenshots and a public preview never show anyone's real windows. Deterministic: the same day
 // always comes out the same. Nothing here reaches a backend.
-import { PALETTE } from "../engine/rules";
+import { KIND_LABEL, PALETTE } from "../engine/rules";
 import type { Project, RawAfk, RawAgent, RawEvents, RawInput, RawWindow, Rule } from "../engine/types";
+import { getLang, num } from "../lib/i18n";
 import { addDays, startOfDay } from "../lib/time";
 
 const MIN = 60_000;
@@ -12,18 +13,20 @@ const DAYS = 150;
 type Act = { app: string; title: string };
 type P = Project & { keys?: string[]; apps?: string[]; acts: Act[]; agent?: string; from?: number; to?: number; weight: number };
 
+// the made-up person speaks the interface language: names, titles and chats
+const L = (ru: string, en: string) => (getLang() === "en" ? en : ru);
 const edge = (t: string) => ({ app: "msedge.exe", title: `${t} - Microsoft Edge` });
 const now0 = startOfDay(Date.now());
 const ago = (d: number) => addDays(now0, -d);
 
 const WORK: P[] = [
   {
-    id: "p_aurora", name: "Aurora — сайт", color: PALETTE[0], kind: "work", keys: ["aurora"], weight: 3, from: ago(95),
+    id: "p_aurora", name: L("Aurora — сайт", "Aurora — website"), color: PALETTE[0], kind: "work", keys: ["aurora"], weight: 3, from: ago(95),
     acts: [
       { app: "Figma.exe", title: "Aurora — website - Figma" },
       { app: "Figma.exe", title: "Aurora — mobile - Figma" },
       edge("Aurora — staging"),
-      { app: "Telegram.exe", title: "Aurora · команда" },
+      { app: "Telegram.exe", title: L("Aurora · команда", "Aurora · team") },
     ],
   },
   {
@@ -38,9 +41,9 @@ const WORK: P[] = [
   {
     id: "p_kite", name: "Kite Studio", color: PALETTE[2], kind: "work", keys: ["kite"], weight: 2,
     acts: [
-      { app: "Telegram.exe", title: "Kite Studio · дизайн" },
+      { app: "Telegram.exe", title: L("Kite Studio · дизайн", "Kite Studio · design") },
       { app: "Figma.exe", title: "Kite × Spring campaign - Figma" },
-      edge("Kite Studio — бриф - Google Docs"),
+      edge(L("Kite Studio — бриф - Google Docs", "Kite Studio — brief - Google Docs")),
     ],
   },
   {
@@ -52,32 +55,35 @@ const WORK: P[] = [
     ],
   },
   {
-    id: "p_motion", name: "Дизайн и моушн", color: PALETTE[4], kind: "work", keys: ["motion\\"], weight: 0.7,
+    id: "p_motion", name: L("Дизайн и моушн", "Design & motion"), color: PALETTE[4], kind: "work", keys: ["motion\\"], weight: 0.7,
     acts: [
       { app: "AfterFX.exe", title: "Adobe After Effects 2026 - C:\\Work\\motion\\intro.aep" },
       { app: "AfterFX.exe", title: "Adobe After Effects 2026 - C:\\Work\\motion\\logo-reveal.aep" },
     ],
   },
-  { id: "p_ai", name: "ИИ-чаты и генерация", color: PALETTE[5], kind: "work", apps: ["chatgpt.exe"], weight: 1.1, acts: [{ app: "ChatGPT.exe", title: "ChatGPT" }] },
+  { id: "p_ai", name: L("ИИ-чаты и генерация", "AI chats"), color: PALETTE[5], kind: "work", apps: ["chatgpt.exe"], weight: 1.1, acts: [{ app: "ChatGPT.exe", title: "ChatGPT" }] },
 ];
 
 const FUN: P[] = [
   {
-    id: "p_video", name: "Видео", color: PALETTE[6], kind: "leisure", keys: ["youtube"], weight: 3,
-    acts: ["Как устроен рендеринг шрифтов", "Lo-fi beats to code to", "История Pixar за 20 минут", "Speedrun Celeste Any%", "Как работает GPS"].map((t) => edge(`${t} - YouTube`)),
+    id: "p_video", name: L("Видео", "Video"), color: PALETTE[6], kind: "leisure", keys: ["youtube"], weight: 3,
+    acts: (getLang() === "en"
+      ? ["How font rendering works", "Lo-fi beats to code to", "The Pixar story in 20 minutes", "Speedrun Celeste Any%", "How GPS works"]
+      : ["Как устроен рендеринг шрифтов", "Lo-fi beats to code to", "История Pixar за 20 минут", "Speedrun Celeste Any%", "Как работает GPS"]
+    ).map((t) => edge(`${t} - YouTube`)),
   },
-  { id: "p_games", name: "Игры", color: PALETTE[7], kind: "leisure", apps: ["deadlock.exe", "steam.exe"], weight: 3, acts: [{ app: "deadlock.exe", title: "Deadlock" }, { app: "steam.exe", title: "Steam" }] },
-  { id: "p_streams", name: "Стримы", color: PALETTE[8], kind: "leisure", keys: ["twitch"], weight: 1, acts: [edge("speedrun_marathon - Twitch")] },
-  { id: "p_music", name: "Музыка", color: PALETTE[9 % PALETTE.length], kind: "leisure", apps: ["spotify.exe"], weight: 0.6, acts: [{ app: "Spotify.exe", title: "Spotify Premium" }] },
+  { id: "p_games", name: L("Игры", "Games"), color: PALETTE[7], kind: "leisure", apps: ["deadlock.exe", "steam.exe"], weight: 3, acts: [{ app: "deadlock.exe", title: "Deadlock" }, { app: "steam.exe", title: "Steam" }] },
+  { id: "p_streams", name: L("Стримы", "Streams"), color: PALETTE[8], kind: "leisure", keys: ["twitch"], weight: 1, acts: [edge("speedrun_marathon - Twitch")] },
+  { id: "p_music", name: L("Музыка", "Music"), color: PALETTE[9 % PALETTE.length], kind: "leisure", apps: ["spotify.exe"], weight: 0.6, acts: [{ app: "Spotify.exe", title: "Spotify Premium" }] },
 ];
 
 const LIFE: P[] = [
-  { id: "p_personal", name: "Личное", color: "#8A8FA3", kind: "personal", keys: ["семья", "ozon"], weight: 1, acts: [{ app: "Telegram.exe", title: "Семья" }, edge("Ozon — корзина")] },
-  { id: "p_system", name: "Служебное", color: "#6B7280", kind: "system", apps: ["explorer.exe", "systemsettings.exe"], weight: 1, acts: [{ app: "explorer.exe", title: "Загрузки" }, { app: "SystemSettings.exe", title: "Параметры" }] },
+  { id: "p_personal", name: L("Личное", "Personal"), color: "#8A8FA3", kind: "personal", keys: [L("семья", "family"), L("ozon", "amazon")], weight: 1, acts: [{ app: "Telegram.exe", title: L("Семья", "Family") }, edge(L("Ozon — корзина", "Amazon — cart"))] },
+  { id: "p_system", name: L("Служебное", "Utility"), color: "#6B7280", kind: "system", apps: ["explorer.exe", "systemsettings.exe"], weight: 1, acts: [{ app: "explorer.exe", title: L("Загрузки", "Downloads") }, { app: "SystemSettings.exe", title: L("Параметры", "Settings") }] },
 ];
 
 // nobody's rules catch these: they end up in "Неразобранное"
-const STRAY: Act[] = [edge("Новая вкладка"), { app: "Notion.exe", title: "Untitled" }, edge("Погода в Москве")];
+const STRAY: Act[] = [edge(L("Новая вкладка", "New tab")), { app: "Notion.exe", title: "Untitled" }, edge(L("Погода в Москве", "Weather in London"))];
 
 const ALL = [...WORK, ...FUN, ...LIFE];
 
@@ -187,28 +193,54 @@ function store(): { projects: Project[]; rules: Rule[]; version: 1 } {
 // ---- a written summary, made from the same numbers the page sends to the AI ----
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Payload = Record<string, any>;
-const hrs = (h: number) => `${String(h).replace(".", ",")} ч`;
+const hrs = (h: number) => `${num(h)} ${L("ч", "h")}`;
 
 function summary(d: Payload) {
-  const work = (d.byProject ?? []).filter((p: Payload) => p.kind === "Работа" && p.hours > 0);
-  const fun = (d.byProject ?? []).filter((p: Payload) => p.kind === "Досуг" && p.hours > 0);
+  const en = getLang() === "en";
+  const WORK_K = KIND_LABEL.work;
+  const FUN_K = KIND_LABEL.leisure;
+  const work = (d.byProject ?? []).filter((p: Payload) => p.kind === WORK_K && p.hours > 0);
+  const fun = (d.byProject ?? []).filter((p: Payload) => p.kind === FUN_K && p.hours > 0);
   const top = work.slice(0, 3).map((p: Payload) => `${p.name} — ${hrs(p.hours)}`).join(", ");
-  const w = d.byKind?.["Работа"] ?? 0;
-  if (d.period === "день") {
+  const w = d.byKind?.[WORK_K] ?? 0;
+  if (d.period === "день" || d.period === "day") {
     const r = d.rhythm ?? {};
-    const usual = d.usual ? (w > d.usual.workHoursOnWorkingDay ? `больше обычных ${hrs(d.usual.workHoursOnWorkingDay)}` : `меньше обычных ${hrs(d.usual.workHoursOnWorkingDay)}`) : "";
+    const u = d.usual ? hrs(d.usual.workHoursOnWorkingDay) : "";
+    const more = d.usual ? w > d.usual.workHoursOnWorkingDay : false;
+    const usual = !d.usual ? "" : en ? `${more ? "above" : "below"} your usual ${u}` : `${more ? "больше" : "меньше"} обычных ${u}`;
+    const longest = r.longestSession?.title ?? "—";
+    const mins = r.longestSession?.minutes ?? 0;
+    if (en)
+      return {
+        headline: work[0] ? `${hrs(w)} of work, mostly ${work[0].name}${fun[0] ? `; evening: ${fun[0].name.toLowerCase()}` : ""}` : "A quiet day",
+        points: [
+          { label: "Main", text: `${hrs(w)} of work${usual ? `, ${usual}` : ""}: ${top}.` },
+          { label: "Rhythm", text: `${r.start} to ${r.end}, ${r.sessions} sessions. Longest: “${longest}”, ${mins} min; busiest ${r.busiestWorkHour ?? "midday"}.` },
+          { label: "Leisure", text: fun.length ? `${hrs(d.byKind?.[FUN_K] ?? 0)}: ${fun.map((p: Payload) => p.name.toLowerCase()).join(", ")}.` : "Hardly any leisure." },
+        ],
+      };
     return {
       headline: work[0] ? `${hrs(w)} работы, в основном ${work[0].name}${fun[0] ? `; вечером — ${fun[0].name.toLowerCase()}` : ""}` : "Тихий день",
       points: [
         { label: "Главное", text: `${hrs(w)} работы${usual ? `, ${usual}` : ""}: ${top}.` },
-        { label: "Ритм", text: `С ${r.start} до ${r.end}, ${r.sessions} сессий. Самая длинная — «${r.longestSession?.title ?? "—"}», ${r.longestSession?.minutes ?? 0} мин; плотнее всего ${r.busiestWorkHour ?? "днём"}.` },
-        { label: "Досуг", text: fun.length ? `${hrs(d.byKind?.["Досуг"] ?? 0)}: ${fun.map((p: Payload) => p.name.toLowerCase()).join(", ")}.` : "Досуга почти не было." },
+        { label: "Ритм", text: `С ${r.start} до ${r.end}, ${r.sessions} сессий. Самая длинная — «${longest}», ${mins} мин; плотнее всего ${r.busiestWorkHour ?? "днём"}.` },
+        { label: "Досуг", text: fun.length ? `${hrs(d.byKind?.[FUN_K] ?? 0)}: ${fun.map((p: Payload) => p.name.toLowerCase()).join(", ")}.` : "Досуга почти не было." },
       ],
     };
   }
   const prev = d.previousByKind ?? d.previousMonthByKind;
-  const pw = prev?.["Работа"];
+  const pw = prev?.[WORK_K];
   const h = d.highlights ?? {};
+  if (en)
+    return {
+      headline: `${d.date}: ${hrs(w)} of work, led by ${work[0]?.name ?? "—"}`,
+      points: [
+        { label: "Main", text: `${top}.` },
+        ...(pw ? [{ label: "Shifts", text: `${w >= pw ? "More" : "Less"} work than last time: ${hrs(w)} vs ${hrs(pw)}.` }] : []),
+        { label: "Rhythm", text: `${h.workingDays ?? 0} working days, most often ${d.rhythm?.busiestWeekday ?? "on weekdays"}, ${d.rhythm?.busiestWorkHours ?? ""}. Streak: ${h.longestWorkStreakDays ?? 0} days in a row.` },
+        { label: "Note", text: h.busiestWorkDay ? `Busiest day: ${h.busiestWorkDay.date}, ${hrs(h.busiestWorkDay.workHours)} of work.` : "An even period with no peaks." },
+      ],
+    };
   return {
     headline: `${d.date}: ${hrs(w)} работы, впереди ${work[0]?.name ?? "—"}`,
     points: [

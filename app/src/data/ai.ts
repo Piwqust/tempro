@@ -6,6 +6,7 @@ import { compileCategories, type AwCategory } from "../engine/categories";
 import { appName } from "../engine/context";
 import { KIND_LABEL, kindOf as projectKind } from "../engine/rules";
 import type { Model, Project, Rule, Segment, Session } from "../engine/types";
+import { t } from "../lib/i18n";
 import { call } from "./api";
 import { useBackend, useSettings } from "./backend";
 import { actions, refreshStore, useStore } from "./store";
@@ -78,13 +79,13 @@ export function useTitles(model: Model | null): Map<string, string> {
 /** What a title is, in words the model can use to tell a project folder from a browser tab. */
 function kindOf(s: Segment): string {
   const a = s.app.toLowerCase();
-  if (s.path) return "папка Claude Code";
-  if (a === "figma.exe") return "файл Figma";
-  if (/^(afterfx|photoshop|illustrator|adobe premiere pro)\.exe$/.test(a)) return "файл Adobe";
-  if (/^(cursor|code)\.exe$/.test(a)) return "папка редактора";
-  if (s.url || /^(msedge|chrome|firefox)\.exe$/.test(a)) return "вкладка браузера";
-  if (/^(telegram|discord|whatsapp|slack)\.exe$/.test(a)) return "чат";
-  return "окно";
+  if (s.path) return t("папка Claude Code");
+  if (a === "figma.exe") return t("файл Figma");
+  if (/^(afterfx|photoshop|illustrator|adobe premiere pro)\.exe$/.test(a)) return t("файл Adobe");
+  if (/^(cursor|code)\.exe$/.test(a)) return t("папка редактора");
+  if (s.url || /^(msedge|chrome|firefox)\.exe$/.test(a)) return t("вкладка браузера");
+  if (/^(telegram|discord|whatsapp|slack)\.exe$/.test(a)) return t("чат");
+  return t("окно");
 }
 
 const norm = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "");

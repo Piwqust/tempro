@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { addDays, startOfDay } from "./lib/time";
 import { DEMO } from "./data/api";
+import { useSettings } from "./data/backend";
+import { getLang, langSetting, setLang } from "./lib/i18n";
 import { NavContext, type Nav } from "./nav";
 import { Journal } from "./screens/Journal";
 import { granOf, GRAN_KEY, GRANS, screenOf, step } from "./lib/period";
@@ -37,6 +39,12 @@ export default function App() {
   const go = useCallback((patch: Partial<Nav>) => setNav((n) => ({ ...n, ...patch })), []);
   const ctx = useMemo(() => ({ nav, go }), [nav, go]);
   const lock = useLock();
+  const { settings, loaded } = useSettings();
+  // the backend keeps the choice too (tray menu, AI answers); it wins when the two disagree
+  useEffect(() => {
+    document.documentElement.lang = getLang();
+    if (loaded && !DEMO && settings.lang !== langSetting()) setLang(settings.lang);
+  }, [loaded, settings.lang]);
   const lockRef = useRef(lock);
   lockRef.current = lock;
 

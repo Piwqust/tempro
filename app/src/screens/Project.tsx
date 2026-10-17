@@ -5,6 +5,7 @@ import { actions } from "../data/store";
 import { appName } from "../engine/context";
 import { KIND_COLOR, KIND_LABEL, kindOf } from "../engine/rules";
 import { saveCsv, sessionsCsv } from "../lib/csv";
+import { locale, t } from "../lib/i18n";
 import { addDays, dayNum, dur, HOUR, startOfDay, weekday } from "../lib/time";
 import { useNav } from "../nav";
 import { AppIcon, BigNum } from "../ui/bits";
@@ -61,8 +62,8 @@ export function Project() {
   if (!p) {
     return (
       <>
-        <TopBar icon={<FolderKanban size={14} strokeWidth={1.9} />} section="Проекты" />
-        <div className="empty">Проект не найден</div>
+        <TopBar icon={<FolderKanban size={14} strokeWidth={1.9} />} section={t("Проекты")} />
+        <div className="empty">{t("Проект не найден")}</div>
       </>
     );
   }
@@ -75,7 +76,7 @@ export function Project() {
     <>
       <TopBar
         icon={<FolderKanban size={14} strokeWidth={1.9} />}
-        section="Проекты"
+        section={t("Проекты")}
         title={
           <span className="pj-title">
             <ProjectIcon project={p} size={22} />
@@ -85,12 +86,12 @@ export function Project() {
         right={
           <>
             <button type="button" className="btn btn-ghost-white" onClick={() => go({ screen: "projects" })}>
-              <ArrowLeft size={15} /> Все проекты
+              <ArrowLeft size={15} /> {t("Все проекты")}
             </button>
             <div className="segmented">
               {RANGES.map((r) => (
                 <button key={r} type="button" data-on={days === r || undefined} onClick={() => setDays(r)}>
-                  {r} дней
+                  {t("{n} дней", { n: r })}
                 </button>
               ))}
             </div>
@@ -108,20 +109,20 @@ export function Project() {
               <div className="kpi kpi-main">
                 <span className="kpi-label">#{p.name}</span>
                 <BigNum ms={data.total} className="kpi-num" />
-                <span className="kpi-sub">за {days} дней</span>
+                <span className="kpi-sub">{t("за {n} дней", { n: days })}</span>
               </div>
               <div className="kpi card">
-                <span className="kpi-label">7 дней</span>
+                <span className="kpi-label">{t("7 дней")}</span>
                 <BigNum ms={data.week} className="kpi-num" />
               </div>
               <div className="kpi card">
-                <span className="kpi-label">{work ? "в среднем за рабочий день" : "в среднем за день с ним"}</span>
+                <span className="kpi-label">{work ? t("в среднем за рабочий день") : t("в среднем за день с ним")}</span>
                 <BigNum ms={data.activeDays ? data.total / data.activeDays : 0} className="kpi-num" />
-                <span className="kpi-sub">{data.activeDays} дн. {work ? "с работой" : "из " + days}</span>
+                <span className="kpi-sub">{work ? t("{n} дн. с работой", { n: data.activeDays }) : t("{n} дн. из {total}", { n: data.activeDays, total: days })}</span>
               </div>
               {work ? (
                 <div className="kpi card">
-                  <span className="kpi-label">ставка в час</span>
+                  <span className="kpi-label">{t("ставка в час")}</span>
                   <label className="rate">
                     <input
                       type="number"
@@ -132,23 +133,23 @@ export function Project() {
                     />
                     <span>₽</span>
                   </label>
-                  <span className="kpi-sub">{money ? `≈ ${Math.round(money).toLocaleString("ru-RU")} ₽ за период` : "для выгрузки и суммы"}</span>
+                  <span className="kpi-sub">{money ? t("≈ {sum} ₽ за период", { sum: Math.round(money).toLocaleString(locale()) }) : t("для выгрузки и суммы")}</span>
                 </div>
               ) : (
                 <div className="kpi card">
-                  <span className="kpi-label">вид</span>
+                  <span className="kpi-label">{t("вид")}</span>
                   <span className="kpi-kind" style={{ color: KIND_COLOR[kindOf(p)] }}>
                     {KIND_LABEL[kindOf(p)]}
                   </span>
-                  <span className="kpi-sub">не работа: без ставки и не в «Работе»</span>
+                  <span className="kpi-sub">{t("не работа: без ставки и не в «Работе»")}</span>
                 </div>
               )}
             </section>
 
             <section className="card bars">
               <header className="card-head">
-                <span>По дням</span>
-                {data.agents > 0 && <span className="muted">агенты Claude Code работали {dur(data.agents)}</span>}
+                <span>{t("По дням")}</span>
+                {data.agents > 0 && <span className="muted">{t("агенты Claude Code работали {dur}", { dur: dur(data.agents) })}</span>}
               </header>
               <div className="bars-row" style={{ "--c": p.color } as CSSProperties}>
                 {data.perDay.map((d) => (
@@ -170,8 +171,8 @@ export function Project() {
 
             <div className="two">
               <section className="card list-card">
-                <header className="card-head">Документы, вкладки, папки</header>
-                {data.docs.length === 0 && <div className="empty">Нет данных</div>}
+                <header className="card-head">{t("Документы, вкладки, папки")}</header>
+                {data.docs.length === 0 && <div className="empty">{t("Нет данных")}</div>}
                 {data.docs.map(([label, v]) => (
                   <div key={label} className="list-row">
                     <AppIcon app={v.app} size={16} />
@@ -182,7 +183,7 @@ export function Project() {
                 ))}
               </section>
               <section className="card list-card">
-                <header className="card-head">Программы</header>
+                <header className="card-head">{t("Программы")}</header>
                 {data.apps.map(([app, ms]) => (
                   <div key={app} className="list-row">
                     <AppIcon app={app} size={16} />
@@ -196,7 +197,7 @@ export function Project() {
 
             <section className="card list-card">
               <header className="card-head">
-                <span>Сессии</span>
+                <span>{t("Сессии")}</span>
                 <button
                   type="button"
                   className="btn btn-quiet"
@@ -204,10 +205,10 @@ export function Project() {
                 >
                   <Download size={14} /> CSV
                 </button>
-                {saved && <span className="muted">сохранено: {saved}</span>}
+                {saved && <span className="muted">{t("сохранено: {path}", { path: saved })}</span>}
               </header>
               <div className="project-sessions">
-                <SessionList sessions={data.sessions} projects={projects} selected={selected} onSelect={setSelected} grouped empty="Сессий нет" />
+                <SessionList sessions={data.sessions} projects={projects} selected={selected} onSelect={setSelected} grouped empty={t("Сессий нет")} />
               </div>
             </section>
           </>

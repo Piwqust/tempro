@@ -2,6 +2,7 @@ import { RotateCw, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { call } from "../data/api";
 import { useSettings } from "../data/backend";
+import { getLang, t } from "../lib/i18n";
 
 export type Summary = { headline: string; points: { label: string; text: string }[]; at: number };
 
@@ -45,7 +46,7 @@ export function AiSummaryBody({ id, payload, empty, onFull }: { id: string; payl
     setBusy(true);
     setErr(null);
     try {
-      const r = await call<Omit<Summary, "at">>("ai_summary", { day: payload() });
+      const r = await call<Omit<Summary, "at">>("ai_summary", { day: { ...payload(), lang: getLang() } });
       const next = { headline: r.headline, points: r.points ?? [], at: Date.now() };
       setS(next);
       void save(id, next, settings.detailDays ?? 30);
@@ -59,9 +60,9 @@ export function AiSummaryBody({ id, payload, empty, onFull }: { id: string; payl
   return (
     <div className="ais">
       <span className="ais-label">
-        <Sparkles size={12} /> Сводка от Claude
+        <Sparkles size={12} /> {t("Сводка от Claude")}
         {s && (
-          <button type="button" className="ais-again" onClick={ask} disabled={busy} title="Написать заново">
+          <button type="button" className="ais-again" onClick={ask} disabled={busy} title={t("Написать заново")}>
             <RotateCw size={12} className={busy ? "spin" : undefined} />
           </button>
         )}
@@ -85,7 +86,7 @@ export function AiSummaryBody({ id, payload, empty, onFull }: { id: string; payl
       )}
       {!s && (
         <button type="button" className="btn btn-quiet" disabled={busy} onClick={ask}>
-          {busy ? "Пишу…" : "Написать"}
+          {busy ? t("Пишу…") : t("Написать")}
         </button>
       )}
     </div>

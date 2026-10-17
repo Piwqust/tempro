@@ -15,7 +15,8 @@
 
   --ink: #171717;
   --ink-2: #555555;
-  --ink-3: #8a8a8a;
+  /* 4.7:1 on white: captions stay readable */
+  --ink-3: #737373;
   --ink-4: #b4b4b4;
 
   --line: rgba(0, 0, 0, 0.065);
@@ -71,8 +72,8 @@
     --pill-hover: #2f2f2f;
     --ink: #f2f2f2;
     --ink-2: #b3b3b3;
-    --ink-3: #808080;
-    --ink-4: #5a5a5a;
+    --ink-3: #8f8f8f;
+    --ink-4: #666666;
     --line: rgba(255, 255, 255, 0.07);
     --line-2: rgba(255, 255, 255, 0.12);
     --grid: rgba(255, 255, 255, 0.04);
