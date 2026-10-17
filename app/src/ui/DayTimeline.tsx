@@ -432,11 +432,14 @@ export function DayTimeline({ model, projects, visible, selected, onSelect, titl
           onClick={() => onSelect(null)}
         >
           <div className="dtl-ruler">
-            {ticks.map((t) => (
-              <span key={t} className="dtl-tick" style={{ left: `${x(t)}%` }}>
-                {step >= HOUR ? `${new Date(t).getHours()}:00` : clock(t)}
-              </span>
-            ))}
+            {/* the red "now" label covers ~40px of the ruler: a tick under it would read as 09:30:00 */}
+            {ticks
+              .filter((t) => !(live && Math.abs(t - now) * pxPerMs < 40))
+              .map((t) => (
+                <span key={t} className="dtl-tick" style={{ left: `${x(t)}%` }}>
+                  {clock(t)}
+                </span>
+              ))}
           </div>
           {ticks.map((t) => (
             <span key={`g${t}`} className="dtl-grid-line" style={{ left: `${x(t)}%` }} />
