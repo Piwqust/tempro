@@ -9,10 +9,12 @@ type Props = {
   /** omitted: follow the anchor, so a trigger on the right half opens leftwards instead of over the next card */
   align?: "start" | "end";
   offset?: number;
+  /** opened from the keyboard: show at once */
+  instant?: boolean;
 };
 
 /** Fixed-position popover anchored to an element; flips up when there's no room below. */
-export function Popover({ anchor, open, onClose, children, align, offset = 6 }: Props) {
+export function Popover({ anchor, open, onClose, children, align, offset = 6, instant }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<{ x: number; y: number; up: boolean; ox: number } | null>(null);
 
@@ -57,6 +59,7 @@ export function Popover({ anchor, open, onClose, children, align, offset = 6 }: 
       ref={ref}
       className="popover"
       data-up={pos?.up || undefined}
+      data-instant={instant || undefined}
       // opacity, not visibility: a hidden element can't take focus, and menus autofocus their search field
       style={{
         left: pos?.x ?? 0,

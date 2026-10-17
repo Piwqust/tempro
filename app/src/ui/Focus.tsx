@@ -21,6 +21,8 @@ export function Focus() {
   const manual = useManual();
   const btn = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
+  // opened by the global hotkey: no entry animation for a keyboard action
+  const [byKey, setByKey] = useState(false);
   const [, tick] = useState(0);
 
   const now = Date.now();
@@ -36,9 +38,10 @@ export function Focus() {
   // tray menu and the global hotkey open the picker
   useEffect(() => {
     // the right-click menu asks through the page
-    const open = () => setOpen(true);
+    const open = () => (setByKey(false), setOpen(true));
+    const openByKey = () => (setByKey(true), setOpen(true));
     window.addEventListener("tempro:focus-picker", open);
-    const off = isTauri() ? listen("focus-picker", open) : null;
+    const off = isTauri() ? listen("focus-picker", openByKey) : null;
     return () => {
       window.removeEventListener("tempro:focus-picker", open);
       off?.then((f) => f());
@@ -59,12 +62,12 @@ export function Focus() {
           </button>
         </div>
       ) : (
-        <button ref={btn} type="button" className="focus-start" onClick={() => setOpen(true)}>
+        <button ref={btn} type="button" className="focus-start" onClick={() => (setByKey(false), setOpen(true))}>
           <Target size={15} strokeWidth={1.75} />
           {t("Сейчас работаю над…")}
         </button>
       )}
-      <Popover anchor={btn.current} open={open && !cur} onClose={() => setOpen(false)}>
+      <Popover anchor={btn.current} open={open && !cur} onClose={() => setOpen(false)} instant={byKey}>
         <ProjectPicker
           current={null}
           onPick={(id) => {
