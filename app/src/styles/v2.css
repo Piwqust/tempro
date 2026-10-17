@@ -597,6 +597,36 @@ button.ov-card:disabled {
 }
 
 /* ---------- bottom grid ---------- */
+.day-empty {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 40px 24px 44px;
+  text-align: center;
+  font-size: 13.5px;
+  color: var(--ink-3);
+}
+.day-empty b {
+  margin-top: 4px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.day-empty-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--sunken);
+  color: var(--ink-3);
+}
+.day-empty-icon[data-live] {
+  color: var(--live);
+  background: color-mix(in srgb, var(--live) 10%, transparent);
+}
 .today-grid {
   flex: none;
   display: grid;

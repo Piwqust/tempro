@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
+import { CircleDot, CirclePause } from "lucide-react";
 import { useTitles } from "../data/ai";
+import { useStatus } from "../data/backend";
 import { SHORT_SESSION_MS } from "../engine/compute";
 import { useModel, useProjects } from "../data/useModel";
 import { pl, t } from "../lib/i18n";
-import { addDays } from "../lib/time";
+import { addDays, startOfDay } from "../lib/time";
 import { useNav } from "../nav";
 import { DayTimeline } from "../ui/DayTimeline";
 import { FilterBar, useFilter } from "../ui/FilterBar";
@@ -12,6 +14,26 @@ import { Questions } from "../ui/Questions";
 import { SessionList } from "../ui/SessionList";
 import { PeriodBar } from "../ui/PeriodBar";
 import { Loading, LoadError } from "./states";
+
+function DayEmpty({ today }: { today: boolean }) {
+  const status = useStatus().data;
+  const paused = !!status?.paused;
+  return (
+    <section className="card day-empty">
+      <span className="day-empty-icon" data-live={(today && !paused) || undefined}>
+        {today && paused ? <CirclePause size={20} strokeWidth={1.75} /> : <CircleDot size={20} strokeWidth={1.75} />}
+      </span>
+      <b>{today ? (paused ? t("Запись на паузе") : t("Tempro записывает")) : t("За этот день нет активности")}</b>
+      <span>
+        {today
+          ? paused
+            ? t("Включи запись в настройках или в трее, и день начнёт заполняться.")
+            : t("Первые сессии появятся здесь через пару минут работы.")
+          : t("Компьютер был выключен или запись стояла на паузе.")}
+      </span>
+    </section>
+  );
+}
 
 export function Today() {
   const { nav, go } = useNav();
@@ -52,32 +74,38 @@ export function Today() {
             <Hero model={model} projects={projects} day={day} />
             <Questions questions={model.questions} />
             <DayTimeline model={model} projects={projects} visible={visible} selected={selected} onSelect={setSelected} titles={titles} />
-            <div className="today-grid">
-              <section className="card today-sessions">
-                <header className="card-head">
-                  <span>{t("Сессии")}</span>
-                  <span className="muted">
-                    {longCount} {pl(longCount, ["сессия", "сессии", "сессий"], ["session", "sessions"])}
-                  </span>
-                  <div className="card-head-right">
-                    <FilterBar model={model} compact />
-                  </div>
-                </header>
-                <SessionList
-                  sessions={sessions}
-                  projects={projects}
-                  selected={selected}
-                  onSelect={setSelected}
-                  titles={titles}
-                  empty={model.sessions.length ? t("Под фильтр ничего не попало") : t("За этот день нет активности")}
-                />
-              </section>
-              <div className="today-side">
-                <Kinds totals={model.byProject} projects={projects} active={nav.projectFilter} onPick={(ids) => go({ projectFilter: ids })} />
-                <Breakdown totals={model.byProject} projects={projects} active={nav.projectFilter} onToggle={toggleProject} />
-                <Leisure model={model} projects={projects} />
+            {/* a day without a single event: one calm message instead of an empty list next to a
+                lone "No data" card */}
+            {model.active === 0 && model.sessions.length === 0 ? (
+              <DayEmpty today={day === startOfDay(Date.now())} />
+            ) : (
+              <div className="today-grid">
+                <section className="card today-sessions">
+                  <header className="card-head">
+                    <span>{t("Сессии")}</span>
+                    <span className="muted">
+                      {longCount} {pl(longCount, ["сессия", "сессии", "сессий"], ["session", "sessions"])}
+                    </span>
+                    <div className="card-head-right">
+                      <FilterBar model={model} compact />
+                    </div>
+                  </header>
+                  <SessionList
+                    sessions={sessions}
+                    projects={projects}
+                    selected={selected}
+                    onSelect={setSelected}
+                    titles={titles}
+                    empty={model.sessions.length ? t("Под фильтр ничего не попало") : t("За этот день нет активности")}
+                  />
+                </section>
+                <div className="today-side">
+                  <Kinds totals={model.byProject} projects={projects} active={nav.projectFilter} onPick={(ids) => go({ projectFilter: ids })} />
+                  <Breakdown totals={model.byProject} projects={projects} active={nav.projectFilter} onToggle={toggleProject} />
+                  <Leisure model={model} projects={projects} />
+                </div>
               </div>
-            </div>
+            )}
           </>
         )}
       </div>
