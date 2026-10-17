@@ -971,6 +971,9 @@ button.ov-card:disabled {
   padding: 0 16px;
   color: var(--ink-3);
 }
+.ptable-new:focus-within {
+  color: var(--ink);
+}
 .ptable-new input {
   flex: 1;
   font-size: 14px;

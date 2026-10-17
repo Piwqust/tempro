@@ -47,7 +47,37 @@ input {
 :focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
-  border-radius: 6px;
+}
+/* a text field shows its own caret; a ring around the menu's search box only boxed it in */
+input:focus-visible,
+textarea:focus-visible {
+  outline: none;
+}
+
+/* Windows' own scrollbars are wide grey slabs with arrow buttons. These are a thin rounded thumb
+   on a clear track that thickens under the pointer: the transparent border is padding around it */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--ink) 16%, transparent) padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  border-width: 2px;
+  background-color: color-mix(in srgb, var(--ink) 30%, transparent);
+}
+::-webkit-scrollbar-thumb:active {
+  background-color: color-mix(in srgb, var(--ink) 42%, transparent);
+}
+::-webkit-scrollbar-button {
+  display: none;
 }
 .truncate {
   min-width: 0;
@@ -519,6 +549,10 @@ input {
   border-bottom: 1px solid var(--line);
   color: var(--ink-3);
 }
+/* focus shows as the search icon waking up, not as a box around the field */
+.menu-search:focus-within {
+  color: var(--ink-2);
+}
 .menu-search input {
   flex: 1;
   min-width: 0;
@@ -544,8 +578,9 @@ input {
   font-size: 14px;
   text-align: left;
 }
+/* the row Enter would pick: a quiet tint, so it reads as a cursor rather than a selection */
 .menu-item[data-active] {
-  background: var(--sunken);
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
 }
 .menu-icon {
   display: grid;
@@ -627,7 +662,6 @@ input {
   min-height: 0;
   overflow-y: auto;
   padding: 4px 2px 4px 0;
-  scrollbar-width: thin;
 }
 .split-stack {
   position: sticky;
