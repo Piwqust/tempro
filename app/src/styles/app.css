@@ -1174,7 +1174,7 @@ input {
   gap: 2px;
   border-radius: 10px;
   overflow: hidden;
-  transition: height 400ms var(--ease-out);
+  transition: height 240ms var(--ease-out);
 }
 .week-seg {
   flex-basis: 0;

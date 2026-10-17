@@ -92,7 +92,7 @@ export function Range({ gran }: { gran: Gran }) {
           <>
             {progress < 1 && (
               <div className="rg-progress">
-                <i style={{ width: `${progress * 100}%` }} />
+                <i style={{ transform: `scaleX(${progress})` }} />
                 <span>{t("Считаю месяцы: {pct}%", { pct: Math.round(progress * 100) })}</span>
               </div>
             )}
@@ -138,7 +138,7 @@ export function Range({ gran }: { gran: Gran }) {
             ) : (
               <>
                 <Heatmap gran={gran} days={days} projects={projects} onOpen={(d) => go({ screen: "today", day: d })} />
-                <Bars gran={gran} days={days} projects={projects} from={from} to={to} onOpen={(g, d) => go({ screen: g === "month" ? "month" : "week", day: d })} />
+                <Bars gran={gran} days={days} projects={projects} from={from} to={to} busy={progress < 1} onOpen={(g, d) => go({ screen: g === "month" ? "month" : "week", day: d })} />
                 <div className="today-grid">
                   <div className="mon-main">
                     <RangeProjects gran={gran} days={days} totals={totals} prevTotals={prevTotals} projects={projects} from={from} to={to} onOpen={(id) => go({ screen: "project", projectId: id })} />
@@ -329,7 +329,7 @@ function buckets(gran: Gran, days: DaySum[], projects: Map<string, Project>, fro
   return out;
 }
 
-function Bars({ gran, days, projects, from, to, onOpen }: { gran: Gran; days: DaySum[]; projects: Map<string, Project>; from: number; to: number; onOpen: (g: Gran, day: number) => void }) {
+function Bars({ gran, days, projects, from, to, busy, onOpen }: { gran: Gran; days: DaySum[]; projects: Map<string, Project>; from: number; to: number; busy: boolean; onOpen: (g: Gran, day: number) => void }) {
   const list = useMemo(() => buckets(gran, days, projects, from, to), [gran, days, projects, from, to]);
   const now = Date.now();
   const max = Math.max(HOUR, ...list.map((b) => b.total));
@@ -353,8 +353,10 @@ function Bars({ gran, days, projects, from, to, onOpen }: { gran: Gran; days: Da
           ))}
         </span>
       </header>
-      <div className="rg-bars-row" style={{ "--n": list.length } as CSSProperties}>
-        {list.map((b) => {
+      {/* months arrive one by one and each new one can change the scale: the bars wait for the last
+          month and then grow once, instead of jumping on every arrival */}
+      <div className="rg-bars-row" data-busy={busy || undefined} style={{ "--n": list.length } as CSSProperties}>
+        {list.map((b, i) => {
           const future = b.start > now;
           const work = b.by.get("work") ?? 0;
           const label = gran === "year" ? monthShort(b.start) : `${dayNum(Math.max(b.start, from))}.${String(new Date(Math.max(b.start, from)).getMonth() + 1).padStart(2, "0")}`;
@@ -370,7 +372,7 @@ function Bars({ gran, days, projects, from, to, onOpen }: { gran: Gran; days: Da
             >
               <span className="rg-bar-val">{work >= 60_000 ? dur(work) : ""}</span>
               <span className="rg-bar-track">
-                <span className="rg-bar-fill" style={{ height: `${(b.total / max) * 100}%` }}>
+                <span className="rg-bar-fill" style={{ height: busy ? 0 : `${(b.total / max) * 100}%`, "--i": i } as CSSProperties}>
                   {KINDS.map((k) => ((b.by.get(k) ?? 0) > 0 ? <i key={k} style={{ flexGrow: b.by.get(k), background: KIND_COLOR[k] }} /> : null))}
                   {(b.by.get(null) ?? 0) > 0 && <i className="mon-none" style={{ flexGrow: b.by.get(null) }} />}
                 </span>

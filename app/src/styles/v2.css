@@ -234,7 +234,7 @@ button.ov-card:disabled {
   height: 100%;
   border-radius: 3px;
   background: var(--ink);
-  transition: width 400ms var(--ease-out);
+  transition: width 240ms var(--ease-out);
 }
 .ov-states {
   display: flex;

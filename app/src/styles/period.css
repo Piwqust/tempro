@@ -190,9 +190,10 @@
 }
 .rg-progress i {
   position: absolute;
-  inset: 0 auto 0 0;
+  inset: 0;
+  transform-origin: left;
   background: color-mix(in srgb, var(--ink) 8%, transparent);
-  transition: width 300ms ease;
+  transition: transform 240ms var(--ease-out);
 }
 .rg-progress span {
   position: relative;
@@ -402,7 +403,11 @@ button.rg-cell:hover:not([data-future]) {
   display: flex;
   flex-direction: column-reverse;
   width: 100%;
-  transition: height 300ms ease;
+  /* height, not scaleY: a scaled stack would squash its rounded ends and the gaps between kinds */
+  transition: height 240ms var(--ease-out) calc(var(--i, 0) * 25ms);
+}
+.rg-bars-row[data-busy] .rg-bar-val {
+  opacity: 0;
 }
 .rg-bar-fill i {
   display: block;
