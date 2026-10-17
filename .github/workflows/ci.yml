@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+      - name: Install
+        working-directory: app
+        run: bun install --frozen-lockfile
+      - name: Engine tests
+        working-directory: app
+        run: bun test
+      # also produces app/dist, which the Rust build embeds
+      - name: Types and frontend build
+        working-directory: app
+        run: bun run build
+
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: app/src-tauri
+      - name: Backend tests
+        working-directory: app/src-tauri
+        run: cargo test --lib

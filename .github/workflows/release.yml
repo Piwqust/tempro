@@ -1,0 +1,33 @@
+name: Release
+
+# push a tag like v0.3.0: the installer is built here and attached to a draft release
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: app/src-tauri
+      - name: Install
+        working-directory: app
+        run: bun install --frozen-lockfile
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: app
+          tauriScript: bun run tauri
+          tagName: ${{ github.ref_name }}
+          releaseName: Tempro ${{ github.ref_name }}
+          releaseBody: Installer for Windows 10/11 (x64). Download Tempro_*_x64-setup.exe and run it. The interface is in Russian.
+          releaseDraft: true

@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Tempro",
+  "version": "0.1.0",
+  "description": "Сообщает Tempro адрес и заголовок активной вкладки, чтобы время в браузере разносилось по проектам.",
+  "permissions": ["tabs", "alarms", "idle", "storage"],
+  "host_permissions": ["http://127.0.0.1/*"],
+  "background": { "service_worker": "background.js" },
+  "content_scripts": [
+    {
+      "matches": ["https://www.youtube.com/*"],
+      "js": ["youtube.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "options_page": "options.html",
+  "action": { "default_title": "Tempro", "default_popup": "options.html" },
+  "incognito": "not_allowed"
+}

@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <title>Tempro</title>
+    <style>
+      body {
+        margin: 0;
+        width: 300px;
+        padding: 16px;
+        font: 13px/1.45 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+        color: #171717;
+        background: #f6f6f6;
+      }
+      h1 {
+        margin: 0 0 10px;
+        font-size: 15px;
+        font-weight: 600;
+      }
+      .ppp-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin: 8px 0;
+      }
+      .ppp-state {
+        padding: 2px 9px;
+        border-radius: 99px;
+        font-weight: 500;
+        background: #efefef;
+        color: #8a8a8a;
+      }
+      .ppp-state[data-ok] {
+        background: #cdeccb;
+        color: #1f6b2a;
+      }
+      input {
+        width: 80px;
+        padding: 5px 8px;
+        border: 0;
+        border-radius: 8px;
+        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+        font: inherit;
+      }
+      p {
+        margin: 10px 0 0;
+        color: #8a8a8a;
+        font-size: 12px;
+      }
+      @media (prefers-color-scheme: dark) {
+        body {
+          background: #161616;
+          color: #f2f2f2;
+        }
+        .ppp-state {
+          background: #262626;
+        }
+        .ppp-state[data-ok] {
+          background: #1c3a20;
+          color: #9ee0a4;
+        }
+        input {
+          background: #1d1d1d;
+          color: #f2f2f2;
+          box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Tempro</h1>
+    <div class="ppp-row">
+      <span>Связь с приложением</span>
+      <span class="ppp-state" id="state">проверяю…</span>
+    </div>
+    <div class="ppp-row">
+      <label for="port">Порт</label>
+      <input id="port" type="number" min="1024" max="65535" />
+    </div>
+    <p>Отправляется только адрес без параметров, заголовок вкладки и играет ли видео. Приватные окна не учитываются.</p>
+    <script src="options.js"></script>
+  </body>
+</html>

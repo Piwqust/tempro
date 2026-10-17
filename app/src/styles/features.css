@@ -1,0 +1,344 @@
+/* Project icons, the lock screen, the right-click menu, AI summaries. */
+
+/* ---------- project icon: the glyph on a tint of the project's colour ---------- */
+.picon {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  border-radius: 28%;
+  background: color-mix(in srgb, var(--c) 16%, transparent);
+  color: var(--c);
+}
+.picon-none {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--ink-4);
+  border-radius: 50%;
+  transform: scale(0.6);
+}
+.pj-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.ps-icons-row {
+  align-items: flex-start;
+}
+.ps-icons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-width: 520px;
+}
+.ps-icon,
+.ps-icon-auto {
+  display: inline-grid;
+  place-items: center;
+  height: 30px;
+  border-radius: 8px;
+  color: var(--ink-2);
+  transition: background 100ms ease, color 100ms ease;
+}
+.ps-icon {
+  width: 30px;
+}
+.ps-icon-auto {
+  display: inline-flex;
+  gap: 5px;
+  padding: 0 10px;
+  font-size: 12.5px;
+  background: var(--pill);
+}
+.ps-icon:hover,
+.ps-icon-auto:hover {
+  background: color-mix(in srgb, var(--ink) 7%, transparent);
+  color: var(--ink);
+}
+.ps-icon[data-on] {
+  background: color-mix(in srgb, var(--c) 18%, transparent);
+  color: var(--c);
+  box-shadow: inset 0 0 0 1.5px var(--c);
+}
+.ps-icon[data-auto] {
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--c) 45%, transparent);
+}
+.ps-icon-auto[data-on] {
+  background: var(--ink);
+  color: var(--surface);
+}
+.tag .picon {
+  margin-left: -2px;
+}
+/* rows that had a 10px colour dot make room for the icon */
+.bd-row:not(.bd-row-kind) {
+  grid-template-columns: 20px minmax(0, 1fr) auto 56px;
+}
+.bd-row > .dot,
+.leisure-head > .dot {
+  justify-self: center;
+}
+.ov-top-row {
+  grid-template-columns: 18px minmax(0, 1fr) 54px auto;
+}
+.leisure-head {
+  grid-template-columns: 18px minmax(0, 1fr) auto;
+}
+.mon-prow {
+  grid-template-columns: 20px minmax(120px, 1fr) minmax(80px, 1.4fr) 56px 64px;
+}
+.rg-prow {
+  grid-template-columns: 20px minmax(120px, 1fr) minmax(70px, 1.2fr) 38px 56px 64px;
+}
+.sb-project {
+  gap: 9px;
+  padding-left: 10px;
+}
+
+/* ---------- AI summary: a headline and labelled points ---------- */
+.ais {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.mon-ai .ais {
+  padding: 14px 16px 4px;
+}
+.ais-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.ais-again {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  margin-left: auto;
+  border-radius: 6px;
+  color: var(--ink-3);
+}
+.ais-again:hover {
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
+  color: var(--ink);
+}
+.spin {
+  animation: spin 900ms linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.ais-headline {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+  user-select: text;
+}
+.ais-points {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px 18px;
+  margin: 2px 0 6px;
+  padding: 0;
+  list-style: none;
+}
+.mon-ai .ais-points {
+  grid-template-columns: minmax(0, 1fr);
+}
+.ais-points li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-left: 10px;
+  border-left: 2px solid var(--line-2);
+  user-select: text;
+}
+.ais-point-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.ais-point-text {
+  font-size: 13px;
+  line-height: 1.45;
+}
+.ais-empty {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+.ais .btn-quiet {
+  align-self: flex-start;
+  margin-left: -8px;
+}
+
+/* ---------- buttons and notes used by the lock ---------- */
+.btn-primary {
+  background: var(--ink);
+  color: var(--surface);
+}
+.btn-primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--ink) 85%, var(--surface));
+}
+.btn-primary:disabled {
+  opacity: 0.4;
+}
+.note-ok {
+  color: #16a06a;
+}
+
+/* ---------- lock: the whole window, the journal, the settings section ---------- */
+.lockscreen {
+  grid-column: 1 / -1;
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  background: var(--canvas);
+}
+.lockscreen-brand {
+  position: absolute;
+  top: 22px;
+  left: 26px;
+}
+.unlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 340px;
+  max-width: calc(100vw - 32px);
+  padding: 28px 28px 18px;
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-raised);
+  text-align: center;
+}
+.unlock-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--sunken);
+  color: var(--ink);
+}
+.unlock h2 {
+  margin: 4px 0 0;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.unlock p {
+  margin: 0 0 6px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+.unlock .field {
+  width: 100%;
+  height: 38px;
+  text-align: center;
+  font-size: 15px;
+}
+.unlock .btn-primary {
+  width: 100%;
+  height: 36px;
+  justify-content: center;
+}
+.unlock-err {
+  font-size: 12.5px;
+  color: #e5484d;
+}
+.unlock-forgot {
+  font-size: 12.5px;
+}
+.unlock-card,
+.lock-inline {
+  display: grid;
+  place-items: center;
+  padding: 36px 16px;
+}
+.unlock-card .unlock,
+.lock-inline .unlock {
+  box-shadow: none;
+  background: transparent;
+  padding: 0;
+}
+.lock-opts {
+  display: inline-flex;
+  gap: 18px;
+}
+.lock-opts label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  cursor: pointer;
+}
+.lock-fields {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.lock-fields .field {
+  width: 132px;
+}
+.field[data-bad] {
+  box-shadow: inset 0 0 0 1.5px #e5484d;
+}
+
+/* ---------- right-click menu ---------- */
+.ctx {
+  position: fixed;
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  min-width: 228px;
+  max-width: 300px;
+  padding: 5px;
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--shadow-pop);
+  animation: pop-in 120ms var(--ease-out);
+}
+.ctx-item {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  height: 30px;
+  padding: 0 9px;
+  border-radius: 7px;
+  font-size: 13px;
+  color: var(--ink);
+  text-align: left;
+}
+.ctx-item:hover,
+.ctx-item:focus-visible {
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
+}
+.ctx-icon {
+  display: grid;
+  place-items: center;
+  color: var(--ink-2);
+}
+.ctx-hint {
+  font: 500 11px var(--font);
+  color: var(--ink-3);
+}
+.ctx-sep {
+  height: 1px;
+  margin: 4px 6px;
+  background: var(--line);
+}

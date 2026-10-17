@@ -1,0 +1,23 @@
+# build output
+app/src-tauri/target/
+app/src-tauri/target-*/
+app/dist/
+node_modules/
+
+# local data never belongs in the repo
+*.db
+*.db-wal
+*.db-shm
+*.encrypting
+.env
+*.log
+scripts/install-outside.log
+
+# generated or local-only
+__pycache__/
+.playwright-mcp/
+# logo variants outlined from locally installed (licensed) fonts
+brand/variants/
+
+brand/variants.py
+brand/sheet.py

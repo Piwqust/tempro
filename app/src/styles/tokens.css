@@ -1,0 +1,94 @@
+/* Design tokens. Direction: references from 2026-10-16 (Timekeep blocks, Linear-like pills, timeline editor).
+   Calm grey canvas, white cards, one saturated colour per project, big light numerals. */
+
+:root {
+  --font: "Inter Variable", "Inter", "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", "Cascadia Mono", ui-monospace, monospace;
+
+  --canvas: #ececec;
+  --panel: #f6f6f6;
+  --surface: #ffffff;
+  --surface-2: #fafafa;
+  --sunken: #efefef;
+  --pill: #e2e2e2;
+  --pill-hover: #d8d8d8;
+
+  --ink: #171717;
+  --ink-2: #555555;
+  --ink-3: #8a8a8a;
+  --ink-4: #b4b4b4;
+
+  --line: rgba(0, 0, 0, 0.065);
+  --line-2: rgba(0, 0, 0, 0.11);
+  --grid: rgba(0, 0, 0, 0.045);
+
+  --focus: #8db0ff;
+  --focus-ring: 0 0 0 1px #8db0ff, 0 0 0 4px rgba(141, 176, 255, 0.22);
+
+  --state-work: #1b1b1b;
+  --state-watch: #2f6bff;
+  --state-away: #d4d4d4;
+  --state-off: transparent;
+  --live: #ff3b30;
+  /* brand: the "now" orange of the logo (brand/README.md) */
+  --signal: #ff5a1f;
+
+  --tint-blue: #cfe0ff;
+  --tint-blue-ink: #1f4fd1;
+  --tint-amber: #ffe2a6;
+  --tint-amber-ink: #8a5a00;
+  --tint-olive: #e3e0b0;
+  --tint-olive-ink: #5f5a12;
+  --tint-green: #cdeccb;
+  --tint-green-ink: #1f6b2a;
+
+  --r-xs: 6px;
+  --r-sm: 8px;
+  --r-md: 11px;
+  --r-lg: 16px;
+  --r-xl: 22px;
+
+  --shadow-card: 0 0 0 1px var(--line), 0 1px 2px rgba(0, 0, 0, 0.03);
+  --shadow-raised: 0 0 0 1px var(--line), 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px -12px rgba(0, 0, 0, 0.12);
+  --shadow-pop: 0 0 0 1px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.04), 0 16px 40px -12px rgba(0, 0, 0, 0.22);
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+
+  --sidebar-w: 244px;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --canvas: #0f0f0f;
+    --panel: #161616;
+    --surface: #1d1d1d;
+    --surface-2: #212121;
+    --sunken: #131313;
+    --pill: #262626;
+    --pill-hover: #2f2f2f;
+    --ink: #f2f2f2;
+    --ink-2: #b3b3b3;
+    --ink-3: #808080;
+    --ink-4: #5a5a5a;
+    --line: rgba(255, 255, 255, 0.07);
+    --line-2: rgba(255, 255, 255, 0.12);
+    --grid: rgba(255, 255, 255, 0.04);
+    --state-work: #f2f2f2;
+    --state-away: #3a3a3a;
+    --tint-blue: #1b2c52;
+    --tint-blue-ink: #9cbcff;
+    --tint-amber: #46350f;
+    --tint-amber-ink: #ffd27a;
+    --tint-olive: #3a3814;
+    --tint-olive-ink: #e2dc8a;
+    --tint-green: #1c3a20;
+    --tint-green-ink: #9ee0a4;
+    --shadow-card: 0 0 0 1px var(--line);
+    --shadow-raised: 0 0 0 1px var(--line), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
+    --shadow-pop: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 16px 40px -12px rgba(0, 0, 0, 0.7);
+    color-scheme: dark;
+  }
+}

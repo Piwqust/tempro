@@ -1,0 +1,67 @@
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
+
+type Props = {
+  anchor: HTMLElement | null;
+  open: boolean;
+  onClose: () => void;
+  children: ReactNode;
+  align?: "start" | "end";
+  offset?: number;
+};
+
+/** Fixed-position popover anchored to an element; flips up when there's no room below. */
+export function Popover({ anchor, open, onClose, children, align = "start", offset = 6 }: Props) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ x: number; y: number; up: boolean } | null>(null);
+
+  useLayoutEffect(() => {
+    if (!open || !anchor || !ref.current) return;
+    const a = anchor.getBoundingClientRect();
+    const p = ref.current.getBoundingClientRect();
+    const up = a.bottom + offset + p.height > window.innerHeight - 8 && a.top - offset - p.height > 8;
+    let x = align === "end" ? a.right - p.width : a.left;
+    x = Math.max(8, Math.min(x, window.innerWidth - p.width - 8));
+    // when opening upwards pin the bottom edge, so filtering the list doesn't detach it from the anchor
+    setPos({ x, y: up ? window.innerHeight - a.top + offset : a.bottom + offset, up });
+  }, [open, anchor, align, offset]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: PointerEvent) => {
+      const t = e.target as Node;
+      if (ref.current?.contains(t) || anchor?.contains(t)) return;
+      onClose();
+    };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("pointerdown", onDown, true);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("pointerdown", onDown, true);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [open, anchor, onClose]);
+
+  useEffect(() => {
+    if (!open) setPos(null);
+  }, [open]);
+
+  if (!open) return null;
+  return createPortal(
+    <div
+      ref={ref}
+      className="popover"
+      data-up={pos?.up || undefined}
+      // opacity, not visibility: a hidden element can't take focus, and menus autofocus their search field
+      style={{
+        left: pos?.x ?? 0,
+        ...(pos?.up ? { bottom: pos.y } : { top: pos?.y ?? 0 }),
+        opacity: pos ? 1 : 0,
+        pointerEvents: pos ? undefined : "none",
+      }}
+    >
+      {children}
+    </div>,
+    document.body,
+  );
+}

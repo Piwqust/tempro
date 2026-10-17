@@ -1,0 +1,25 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "tempro-ui",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": [
+        "run",
+        "--cwd",
+        "app",
+        "dev"
+      ],
+      "port": 1420
+    },
+    {
+      "name": "tempro-ui-side",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": [
+        "/c",
+        "set TEMPRO_API=http://127.0.0.1:5611&& bun run --cwd app dev"
+      ],
+      "port": 1420
+    }
+  ]
+}

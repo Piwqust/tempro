@@ -1,0 +1,67 @@
+[package]
+name = "tempro"
+version = "0.3.1"
+description = "Tempro: automatic time tracker"
+authors = ["Tempro"]
+edition = "2024"
+
+[lib]
+# The `_lib` suffix avoids a name clash between the lib and bin on Windows (cargo#8519).
+name = "tempro_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+cc = "1"
+# SQLCipher with libtomcrypt as C source: encryption without an OpenSSL install
+sqlcipher-src = "=419.0.6"
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon"] }
+tauri-plugin-single-instance = "2"
+tauri-plugin-autostart = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-global-shortcut = "2"
+tiny_http = "0.12"
+ureq = { version = "3", features = ["json"] }
+rusqlite = { version = "0.40", features = ["sqlcipher"] }
+# linked against the SQLCipher that build.rs compiles
+libsqlite3-sys = { version = "0.38", features = ["sqlcipher", "bundled_bindings"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = 3
+panic = "abort"
+strip = true
+
+[target.'cfg(windows)'.dependencies]
+windows-registry = "0.6"
+windows = { version = "0.62", features = [
+  "Win32_Foundation",
+  "Win32_Graphics_Dwm",
+  "Win32_Graphics_Gdi",
+  "Win32_Media_Audio",
+  "Win32_Media_Audio_Endpoints",
+  "Win32_Security_Credentials",
+  "Win32_Security_Cryptography",
+  "Win32_Storage_Xps",
+  "Win32_System_Com",
+  "Win32_System_LibraryLoader",
+  "Win32_System_Power",
+  "Win32_System_RemoteDesktop",
+  "Win32_System_SystemInformation",
+  "Win32_System_Threading",
+  "Win32_System_WinRT",
+  "Win32_UI_Accessibility",
+  "Win32_UI_Input",
+  "Win32_UI_Input_KeyboardAndMouse",
+  "Win32_UI_Input_XboxController",
+  "Win32_UI_Shell",
+  "Win32_UI_WindowsAndMessaging",
+  "Foundation",
+  "Graphics_Imaging",
+  "Media_Ocr",
+] }

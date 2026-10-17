@@ -1,0 +1,565 @@
+/* Periods: the date button and calendar in the top bar, the 3-month and year screens. */
+
+/* ---------- period bar: the date is a button that opens the calendar ---------- */
+.crumb-current:has(.pb-date) {
+  display: flex;
+}
+.pb-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 30px;
+  margin: 0 -8px;
+  padding: 0 8px;
+  border-radius: 8px;
+  font: inherit;
+  color: var(--ink);
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background 120ms ease;
+}
+.pb-date svg {
+  color: var(--ink-3);
+  transition: transform 160ms ease;
+}
+.pb-date:hover,
+.pb-date[data-open] {
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
+}
+.pb-date[data-open] svg {
+  transform: rotate(180deg);
+}
+
+.dp {
+  display: flex;
+  background: var(--surface);
+  border-radius: 14px;
+  box-shadow: var(--shadow-pop);
+  overflow: hidden;
+}
+.dp-presets {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  width: 172px;
+  padding: 8px;
+  background: var(--surface-2);
+  border-right: 1px solid var(--line);
+}
+.dp-presets button {
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 7px;
+  font-size: 13px;
+  color: var(--ink-2);
+  text-align: left;
+}
+.dp-presets button:hover {
+  background: color-mix(in srgb, var(--ink) 5%, transparent);
+  color: var(--ink);
+}
+.dp-presets button[data-on] {
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 500;
+  box-shadow: var(--shadow-card);
+}
+.dp-keys {
+  margin-top: auto;
+  padding: 10px 10px 2px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+.dp-cal {
+  width: 292px;
+  padding: 10px 12px 12px;
+}
+.dp-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.dp-wd,
+.dp-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+.dp-wd span {
+  height: 22px;
+  font-size: 11px;
+  line-height: 22px;
+  text-align: center;
+  color: var(--ink-3);
+}
+.dp-grid[data-months] {
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+/* --l: 0–4, how much work the day (month) held */
+.dp-cell {
+  position: relative;
+  height: 34px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--c) calc(var(--l) * 14%), transparent);
+  transition: box-shadow 100ms ease;
+}
+.dp-grid[data-months] .dp-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 1px;
+  height: 52px;
+  padding: 0 10px;
+}
+.dp-cell b {
+  font-weight: 500;
+  text-transform: capitalize;
+}
+.dp-cell small {
+  min-height: 14px;
+  font-size: 11px;
+  color: var(--ink-2);
+}
+.dp-cell[data-out] {
+  color: var(--ink-4);
+}
+.dp-cell:disabled {
+  color: var(--ink-4);
+  background: transparent;
+  cursor: default;
+}
+.dp-cell[data-today]::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 4px;
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  border-radius: 50%;
+  background: var(--signal);
+}
+.dp-grid[data-months] .dp-cell[data-today]::after {
+  left: auto;
+  right: 10px;
+  bottom: auto;
+  top: 10px;
+}
+.dp-cell[data-pre] {
+  box-shadow: inset 0 0 0 1px var(--line-2);
+}
+.dp-cell[data-sel] {
+  box-shadow: inset 0 0 0 1.5px var(--ink);
+}
+
+/* ---------- sidebar: periods, then the rest ---------- */
+.sb-gap {
+  height: 8px;
+}
+.sb-key {
+  margin-left: auto;
+  font: 500 10.5px var(--font);
+  color: var(--ink-4);
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+.sb-item:hover .sb-key {
+  opacity: 1;
+}
+
+/* ---------- 3 months / year ---------- */
+.rg-progress {
+  position: relative;
+  flex: none;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--sunken);
+  overflow: hidden;
+  font-size: 11.5px;
+  line-height: 22px;
+  color: var(--ink-2);
+}
+.rg-progress i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: color-mix(in srgb, var(--ink) 8%, transparent);
+  transition: width 300ms ease;
+}
+.rg-progress span {
+  position: relative;
+  padding-left: 10px;
+}
+/* totals are partial until every month is counted */
+.screen[data-busy] > :not(.rg-progress) {
+  opacity: 0.5;
+  transition: opacity 200ms ease;
+}
+.rg-empty {
+  flex: none;
+  padding: 28px 18px;
+  color: var(--ink-2);
+}
+
+.rg-heat {
+  flex: none;
+}
+.rg-scale {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-right: 10px;
+  font-size: 11px;
+  color: var(--ink-3);
+}
+.rg-scale i {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--c) calc(var(--l) * 22%), var(--sunken));
+}
+.rg-scale i:first-of-type {
+  margin-left: 3px;
+}
+.rg-scale i:last-of-type {
+  margin-right: 3px;
+}
+.rg-heat-body {
+  padding: 2px 16px 16px;
+  overflow-x: auto;
+}
+/* a year: a column per week, Monday on top, month names above the week they start in */
+.rg-heat-grid {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: 14px repeat(7, auto);
+  grid-template-columns: 22px repeat(var(--weeks), minmax(9px, 1fr));
+  gap: 3px;
+  max-width: calc(22px + var(--weeks) * 27px);
+}
+.rg-heat-wd,
+.rg-heat-month {
+  font-size: 10.5px;
+  line-height: 12px;
+  color: var(--ink-3);
+  white-space: nowrap;
+  align-self: center;
+}
+.rg-heat-month {
+  align-self: start;
+}
+/* three months: three calendars with dates */
+.rg-months {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 28px;
+}
+.rg-month-name {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.rg-month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+.rg-month-wd {
+  font-size: 10.5px;
+  text-align: center;
+  color: var(--ink-3);
+}
+.rg-month-grid .rg-cell {
+  aspect-ratio: auto;
+  height: 34px;
+  border-radius: 7px;
+  font-size: 12px;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.rg-cell {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 0;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--c) calc(var(--l) * 22%), var(--sunken));
+}
+button.rg-cell:hover:not([data-future]) {
+  box-shadow: inset 0 0 0 1.5px var(--ink);
+}
+.rg-cell[data-off] {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--line-2);
+}
+.rg-cell[data-future] {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--line);
+  cursor: default;
+}
+.rg-cell[data-today] {
+  box-shadow: inset 0 0 0 1.5px var(--signal);
+}
+.rg-cell-pad {
+  background: transparent;
+}
+.rg-tip {
+  position: fixed;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 190px;
+  max-width: 260px;
+  padding: 9px 11px;
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: var(--shadow-pop);
+  font-size: 12.5px;
+  transform: translate(-50%, calc(-100% - 8px));
+  pointer-events: none;
+}
+.rg-tip b {
+  font-weight: 600;
+}
+.rg-tip-kinds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  color: var(--ink-2);
+}
+.rg-tip-kinds span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.rg-tip i {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+}
+.rg-tip-row {
+  display: grid;
+  grid-template-columns: 7px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+}
+.rg-tip-row span:last-child {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+
+.rg-bars {
+  flex: none;
+}
+.rg-bars-row {
+  display: grid;
+  grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+  gap: 6px;
+  height: 196px;
+  padding: 4px 16px 12px;
+}
+.rg-bar {
+  display: grid;
+  grid-template-rows: 16px minmax(0, 1fr) 18px;
+  gap: 4px;
+  min-width: 0;
+  padding: 0;
+  border-radius: 8px;
+}
+.rg-bar:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.rg-bar-val {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink-2);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  font-variant-numeric: tabular-nums;
+}
+.rg-bar-track {
+  display: flex;
+  align-items: flex-end;
+  min-height: 0;
+  border-radius: 6px;
+  background: var(--sunken);
+  overflow: hidden;
+}
+.rg-bar-fill {
+  display: flex;
+  flex-direction: column-reverse;
+  width: 100%;
+  transition: height 300ms ease;
+}
+.rg-bar-fill i {
+  display: block;
+  min-height: 0;
+}
+.rg-bar:hover:not(:disabled) .rg-bar-track {
+  box-shadow: inset 0 0 0 1.5px var(--ink);
+}
+.rg-bar-label {
+  font-size: 11.5px;
+  color: var(--ink-3);
+  text-align: center;
+  white-space: nowrap;
+}
+.rg-bar[data-now] .rg-bar-label {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.rg-prow {
+  grid-template-columns: 10px minmax(120px, 1fr) minmax(70px, 1.2fr) 38px 56px 64px;
+}
+.rg-spark {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 20px;
+}
+.rg-spark i {
+  flex: 1;
+  min-width: 2px;
+  border-radius: 1.5px;
+  opacity: 0.8;
+}
+.rg-share {
+  font-size: 12px;
+  text-align: right;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+.rg-more {
+  width: 100%;
+  text-align: left;
+  color: var(--ink-2);
+}
+.rg-more:hover {
+  background: var(--surface-2);
+}
+
+.rg-rhythm-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(170px, 1fr);
+  gap: 22px;
+  padding: 4px 16px 16px;
+}
+.rg-hours {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.rg-hours-row {
+  display: grid;
+  grid-template-columns: 22px repeat(24, minmax(0, 1fr));
+  gap: 2px;
+  align-items: center;
+}
+.rg-hours-row i {
+  height: 16px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--c) calc(var(--l) * 22%), var(--sunken));
+}
+.rg-hours-wd {
+  font-size: 11px;
+  color: var(--ink-3);
+}
+.rg-hours-axis span {
+  font-size: 10.5px;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+.rg-wd {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.rg-wd-row {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) 44px;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.rg-wd-row b {
+  font-weight: 500;
+  text-align: right;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.rg-wd-row[data-best] span:first-child,
+.rg-wd-row[data-best] b {
+  color: var(--ink);
+}
+.rg-wd-bar {
+  height: 8px;
+  border-radius: 3px;
+  background: var(--sunken);
+  overflow: hidden;
+}
+.rg-wd-bar i {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  opacity: 0.85;
+}
+.rg-wd-note {
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+.rg-hl-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "label value" "sub value";
+  column-gap: 12px;
+  align-items: center;
+  width: 100%;
+  padding: 8px 16px;
+  border-top: 1px solid var(--line);
+  text-align: left;
+}
+button.rg-hl-row:hover {
+  background: var(--surface-2);
+}
+.rg-hl-label {
+  grid-area: label;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.rg-hl-row b {
+  grid-area: value;
+  max-width: 160px;
+  font-size: 15px;
+  font-weight: 500;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.rg-hl-sub {
+  grid-area: sub;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--ink);
+}
+@media (max-width: 1100px) {
+  .rg-rhythm-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
