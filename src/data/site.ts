@@ -2,7 +2,7 @@
 // Assumptions (owner to confirm):
 //   - production URL: https://tempro.angleford.co (GitHub Pages, custom domain)
 //   - the hero heat map is demo data generated in the page (src/lib/demo.ts), labelled "demo data"
-//   - version shown in the footer: the latest tag in the repo (v0.4.0)
+//   - version shown in the footer: the latest tag in the repo (v0.4.1)
 
 export const site = {
   name: 'Tempro',
@@ -16,7 +16,7 @@ export const site = {
   extension: 'https://github.com/Piwqust/tempro/tree/main/extension',
   license: 'https://github.com/Piwqust/tempro/blob/main/LICENSE',
   activitywatch: 'https://activitywatch.net',
-  version: '0.4.0',
+  version: '0.4.1',
   platform: 'Windows 10 and 11',
 };
 
