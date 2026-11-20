@@ -6,6 +6,7 @@ use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::mpsc::{Receiver, RecvTimeoutError, Sender};
 use std::sync::{Arc, Mutex, OnceLock, RwLock};
+use std::time::{Duration, Instant};
 
 use crate::db::{self, Row, Settings, Writer};
 use crate::ocr::OcrSignal;
@@ -16,6 +17,8 @@ pub enum Msg {
     Sensor(Signal),
     Ocr(OcrSignal),
     Browser { url: String, title: String, browser: String, playing: bool, audible: bool },
+    /// write everything kept in memory now, then answer (quitting)
+    Flush(Sender<()>),
 }
 
 #[derive(Default)]
@@ -58,6 +61,9 @@ pub fn scrub_title(s: &Settings, app: &str, title: &str) -> String {
     title.to_string()
 }
 
+/// How long a growing row and the input counters may wait in memory before they are written.
+const FLUSH_EVERY: Duration = Duration::from_secs(15);
+
 struct Live {
     locked: bool,
     sleeping: bool,
@@ -70,8 +76,23 @@ pub fn spawn_writer(state: Arc<AppState>, conn: Connection, rx: Receiver<Msg>) {
         .spawn(move || {
             let mut w = Writer::new(conn);
             let mut live = Live { locked: false, sleeping: false, idle_ms: 0 };
+            let mut flushed = Instant::now();
             loop {
-                let msg = match rx.recv_timeout(std::time::Duration::from_secs(5)) {
+                let msg = rx.recv_timeout(FLUSH_EVERY);
+                if flushed.elapsed() >= FLUSH_EVERY || matches!(msg, Err(RecvTimeoutError::Disconnected)) {
+                    if let Err(e) = w.flush() {
+                        eprintln!("writer: {e}");
+                    }
+                    flushed = Instant::now();
+                }
+                let msg = match msg {
+                    Ok(Msg::Flush(done)) => {
+                        if let Err(e) = w.flush() {
+                            eprintln!("writer: {e}");
+                        }
+                        let _ = done.send(());
+                        continue;
+                    }
                     Ok(m) => m,
                     Err(RecvTimeoutError::Timeout) => continue,
                     Err(RecvTimeoutError::Disconnected) => break,
@@ -116,7 +137,7 @@ fn handle(state: &AppState, w: &mut Writer, live: &mut Live, msg: Msg, now: f64)
             live.idle_ms = idle_ms;
             state.idle_ms.store(idle_ms, Ordering::Relaxed);
             if input.iter().any(|&n| n > 0) {
-                w.add_input((now / 60_000.0).floor() as i64, input[0], input[1], input[2], input[3])?;
+                w.add_input((now / 60_000.0).floor() as i64, input[0], input[1], input[2], input[3]);
             }
             afk_beat(w, live, s.idle_seconds * 1000, now)?;
         }
@@ -138,6 +159,8 @@ fn handle(state: &AppState, w: &mut Writer, live: &mut Live, msg: Msg, now: f64)
                 crate::lock::relock();
             }
             afk_beat(w, live, s.idle_seconds * 1000, now)?;
+            // locking often comes right before shutting down
+            w.flush()?;
         }
         Msg::Sensor(Signal::Sleeping(v)) => {
             if !v {
@@ -146,11 +169,13 @@ fn handle(state: &AppState, w: &mut Writer, live: &mut Live, msg: Msg, now: f64)
             }
             live.sleeping = v;
             afk_beat(w, live, s.idle_seconds * 1000, now)?;
+            w.flush()?;
         }
         Msg::Ocr(OcrSignal::Text { app, title, text }) => {
             let title = scrub_title(&s, &app, &title);
             w.add_ocr(now, &app, &title, &text)?;
         }
+        Msg::Flush(_) => w.flush()?,
         Msg::Browser { url, title, browser, playing, audible } => {
             let title = scrub_title(&s, &browser, &title);
             w.beat("browser", Row::Browser { url: &url, title: &title, browser: &browser, playing, audible }, now, 45_000.0, None)?;

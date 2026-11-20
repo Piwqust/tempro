@@ -48,14 +48,20 @@ export const DEFAULT_SETTINGS: Settings = {
   lang: "auto",
 };
 
+/** Polled every few seconds; the backend answers from memory. */
 export type Status = {
-  counts: { window: number; windowOwn: number; windowAw: number; afk: number; media: number; browser: number; ocr: number; manual: number; firstOwn: number | null; lastEvent: number | null };
   extLastSeen: number;
   extBrowser: string;
   import: { state?: string; window?: number; afk?: number; message?: string; at?: number };
   sensorsSince: number;
   lastSignal: number;
   paused: boolean;
+  now: number;
+};
+
+/** For the settings screen only: counting rows scans the whole database, the rest reads files. */
+export type StatusFull = Status & {
+  counts: { window: number; windowOwn: number; windowAw: number; afk: number; media: number; browser: number; ocr: number; manual: number; firstOwn: number | null; lastEvent: number | null };
   autostart: boolean | null;
   dbPath: string;
   encrypted: boolean;
@@ -64,7 +70,6 @@ export type Status = {
   crashLog?: string;
   awPath: string;
   agentsPath: string;
-  now: number;
 };
 
 export function useBackend() {
@@ -93,7 +98,12 @@ export function useSaveSettings() {
 
 export function useStatus() {
   const has = useBackend().data;
-  return useQuery({ queryKey: ["status"], queryFn: () => call<Status>("status"), enabled: has === true, refetchInterval: 5000 });
+  return useQuery({ queryKey: ["status", "live"], queryFn: () => call<Status>("status"), enabled: has === true, refetchInterval: 5000 });
+}
+
+export function useStatusFull() {
+  const has = useBackend().data;
+  return useQuery({ queryKey: ["status", "full"], queryFn: () => call<StatusFull>("status", { full: true }), enabled: has === true, refetchInterval: 60_000 });
 }
 
 /** Manual spans change history: refetch every loaded range. */

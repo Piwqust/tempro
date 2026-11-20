@@ -66,6 +66,16 @@ const MIGRATIONS: &[&str] = &[
     ALTER TABLE raw_window ADD COLUMN project TEXT;
     ALTER TABLE raw_window ADD COLUMN video INTEGER;
     "#,
+    // 3: Claude Code session files already read (bytes = how far), so a restart continues from there
+    r#"
+    CREATE TABLE agent_file (
+      path TEXT PRIMARY KEY, mtime INTEGER NOT NULL, bytes INTEGER NOT NULL,
+      cwd TEXT NOT NULL, entry TEXT NOT NULL, spans TEXT NOT NULL);
+    "#,
+    // 4: rows that still have their detail; finding the oldest one no longer walks every compacted row
+    r#"
+    CREATE INDEX raw_window_detail ON raw_window (ts) WHERE project IS NULL;
+    "#,
 ];
 
 /// The database key (64 hex chars), set once at startup before any connection opens.
@@ -295,12 +305,26 @@ struct Open {
     ts: f64,
     last: f64,
     table: &'static str,
+    /// extended in memory since its duration was last written
+    dirty: bool,
+}
+
+impl Open {
+    fn write_dur(&self, conn: &Connection, end: f64) -> rusqlite::Result<()> {
+        conn.execute(&format!("UPDATE {} SET dur = ?1 WHERE id = ?2", self.table), params![(end - self.ts) / 1000.0, self.id])?;
+        Ok(())
+    }
 }
 
 /// Owns the write connection. Streams: "window", "afk", "browser", "audio:<app>", "mic:<app>".
+///
+/// A new row is written at once; a row that only grows (the same window, still here) and the
+/// input counters stay in memory until `flush`, so a heartbeat every two seconds doesn't turn
+/// into a disk write every two seconds.
 pub struct Writer {
     pub conn: Connection,
     open: HashMap<String, Open>,
+    input: std::collections::BTreeMap<i64, [u32; 4]>,
 }
 
 pub enum Row<'a> {
@@ -329,17 +353,17 @@ impl Row<'_> {
         }
     }
 
-    fn insert(&self, conn: &Connection, ts: f64) -> rusqlite::Result<i64> {
+    fn insert(&self, conn: &Connection, ts: f64, dur: f64) -> rusqlite::Result<i64> {
         match self {
             Row::Window { app, title, exe } => conn.execute(
-                "INSERT INTO raw_window (ts, dur, app, title, exe) VALUES (?1, 0, ?2, ?3, ?4)",
-                params![ts, app, title, exe],
+                "INSERT INTO raw_window (ts, dur, app, title, exe) VALUES (?1, ?2, ?3, ?4, ?5)",
+                params![ts, dur, app, title, exe],
             ),
-            Row::Afk { afk, kind } => conn.execute("INSERT INTO raw_afk (ts, dur, afk, kind) VALUES (?1, 0, ?2, ?3)", params![ts, *afk as i64, kind]),
-            Row::Media { kind, app } => conn.execute("INSERT INTO raw_media (ts, dur, kind, app) VALUES (?1, 0, ?2, ?3)", params![ts, kind, app]),
+            Row::Afk { afk, kind } => conn.execute("INSERT INTO raw_afk (ts, dur, afk, kind) VALUES (?1, ?2, ?3, ?4)", params![ts, dur, *afk as i64, kind]),
+            Row::Media { kind, app } => conn.execute("INSERT INTO raw_media (ts, dur, kind, app) VALUES (?1, ?2, ?3, ?4)", params![ts, dur, kind, app]),
             Row::Browser { url, title, browser, playing, audible } => conn.execute(
-                "INSERT INTO raw_browser (ts, dur, url, title, browser, playing, audible) VALUES (?1, 0, ?2, ?3, ?4, ?5, ?6)",
-                params![ts, url, title, browser, *playing as i64, *audible as i64],
+                "INSERT INTO raw_browser (ts, dur, url, title, browser, playing, audible) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+                params![ts, dur, url, title, browser, *playing as i64, *audible as i64],
             ),
         }?;
         Ok(conn.last_insert_rowid())
@@ -348,7 +372,7 @@ impl Row<'_> {
 
 impl Writer {
     pub fn new(conn: Connection) -> Self {
-        Self { conn, open: HashMap::new() }
+        Self { conn, open: HashMap::new(), input: Default::default() }
     }
 
     /// The same thing seen again within `pulse_ms` extends the open row; anything else starts a new one.
@@ -358,39 +382,68 @@ impl Writer {
         if let Some(o) = self.open.get_mut(stream) {
             if o.key == key && now - o.last <= pulse_ms {
                 o.last = now;
-                self.conn.execute(&format!("UPDATE {} SET dur = ?1 WHERE id = ?2", o.table), params![(now - o.ts) / 1000.0, o.id])?;
+                o.dirty = true;
                 return Ok(());
             }
         }
         let start = at.unwrap_or(now);
-        // close the previous row at the switch, so streams stay contiguous
+        let tx = self.conn.unchecked_transaction()?;
         if let Some(o) = self.open.get(stream) {
             if now - o.last <= pulse_ms {
-                let end = start.max(o.ts);
-                self.conn.execute(&format!("UPDATE {} SET dur = ?1 WHERE id = ?2", o.table), params![(end - o.ts) / 1000.0, o.id])?;
+                // close the previous row at the switch, so streams stay contiguous
+                o.write_dur(&tx, start.max(o.ts))?;
+            } else if o.dirty {
+                // it stopped on its own a while ago: it lasted until it was last seen
+                o.write_dur(&tx, o.last)?;
             }
         }
-        let id = row.insert(&self.conn, start)?;
-        let dur = (now - start).max(0.0) / 1000.0;
-        if dur > 0.0 {
-            self.conn.execute(&format!("UPDATE {} SET dur = ?1 WHERE id = ?2", row.table()), params![dur, id])?;
-        }
-        self.open.insert(stream.to_string(), Open { key, id, ts: start, last: now, table: row.table() });
+        let id = row.insert(&tx, start, (now - start).max(0.0) / 1000.0)?;
+        tx.commit()?;
+        self.open.insert(stream.to_string(), Open { key, id, ts: start, last: now, table: row.table(), dirty: false });
         Ok(())
     }
 
     /// Streams that weren't refreshed stop on their own: forget them so the next beat starts fresh.
     pub fn expire(&mut self, now: f64, older_than_ms: f64, prefix: &str) {
-        self.open.retain(|k, o| !(k.starts_with(prefix) && now - o.last > older_than_ms));
+        let conn = &self.conn;
+        self.open.retain(|k, o| {
+            let keep = !(k.starts_with(prefix) && now - o.last > older_than_ms);
+            if !keep && o.dirty {
+                let _ = o.write_dur(conn, o.last);
+            }
+            keep
+        });
     }
 
-    pub fn add_input(&mut self, minute: i64, keys: u32, clicks: u32, wheel: u32, moves: u32) -> rusqlite::Result<()> {
-        self.conn.execute(
-            "INSERT INTO raw_input (minute, keys, clicks, wheel, moves) VALUES (?1, ?2, ?3, ?4, ?5)
-             ON CONFLICT(minute) DO UPDATE SET keys = keys + excluded.keys, clicks = clicks + excluded.clicks,
-               wheel = wheel + excluded.wheel, moves = moves + excluded.moves",
-            params![minute, keys, clicks, wheel, moves],
-        )?;
+    pub fn add_input(&mut self, minute: i64, keys: u32, clicks: u32, wheel: u32, moves: u32) {
+        let c = self.input.entry(minute).or_default();
+        for (a, b) in c.iter_mut().zip([keys, clicks, wheel, moves]) {
+            *a += b;
+        }
+    }
+
+    /// Write what has only grown in memory, in one transaction.
+    pub fn flush(&mut self) -> rusqlite::Result<()> {
+        if self.input.is_empty() && !self.open.values().any(|o| o.dirty) {
+            return Ok(());
+        }
+        let tx = self.conn.unchecked_transaction()?;
+        for o in self.open.values().filter(|o| o.dirty) {
+            o.write_dur(&tx, o.last)?;
+        }
+        for (minute, [keys, clicks, wheel, moves]) in &self.input {
+            tx.execute(
+                "INSERT INTO raw_input (minute, keys, clicks, wheel, moves) VALUES (?1, ?2, ?3, ?4, ?5)
+                 ON CONFLICT(minute) DO UPDATE SET keys = keys + excluded.keys, clicks = clicks + excluded.clicks,
+                   wheel = wheel + excluded.wheel, moves = moves + excluded.moves",
+                params![minute, keys, clicks, wheel, moves],
+            )?;
+        }
+        tx.commit()?;
+        self.input.clear();
+        for o in self.open.values_mut() {
+            o.dirty = false;
+        }
         Ok(())
     }
 
@@ -464,11 +517,14 @@ pub fn read_events(conn: &Connection, from: f64, to: f64) -> rusqlite::Result<Ev
                 "projectId": r.get::<_, Option<String>>(4)?, "note": r.get::<_, String>(5)?}))
         },
     )?;
-    let input = rows(
-        "SELECT minute, keys, clicks, wheel, moves FROM raw_input WHERE minute * 60000 >= ?1 AND minute * 60000 < ?2 AND minute * 60000 >= ?3 ORDER BY minute",
-        0.0,
-        &|r| Ok(serde_json::json!({"minute": r.get::<_, i64>(0)?, "keys": r.get::<_, i64>(1)?, "clicks": r.get::<_, i64>(2)?, "wheel": r.get::<_, i64>(3)?, "moves": r.get::<_, i64>(4)?})),
-    )?;
+    // minutes as a key range, so the primary key is used instead of reading every minute ever counted
+    let input = {
+        let mut st = conn.prepare_cached("SELECT minute, keys, clicks, wheel, moves FROM raw_input WHERE minute >= ?1 AND minute < ?2 ORDER BY minute")?;
+        let it = st.query_map(params![(from / 60_000.0).ceil() as i64, (to / 60_000.0).ceil() as i64], |r| {
+            Ok(serde_json::json!({"minute": r.get::<_, i64>(0)?, "keys": r.get::<_, i64>(1)?, "clicks": r.get::<_, i64>(2)?, "wheel": r.get::<_, i64>(3)?, "moves": r.get::<_, i64>(4)?}))
+        })?;
+        it.collect::<rusqlite::Result<Vec<_>>>()?
+    };
     Ok(Events { window, afk, media, browser, ocr, manual, input })
 }
 
@@ -551,7 +607,8 @@ mod tests {
         Writer::new(conn)
     }
 
-    fn rows(w: &Writer) -> Vec<(f64, f64, String)> {
+    fn rows(w: &mut Writer) -> Vec<(f64, f64, String)> {
+        w.flush().unwrap();
         let mut st = w.conn.prepare("SELECT ts, dur, title FROM raw_window ORDER BY ts").unwrap();
         st.query_map([], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?))).unwrap().map(|r| r.unwrap()).collect()
     }
@@ -562,7 +619,7 @@ mod tests {
         for t in [0.0, 2000.0, 4000.0, 6000.0] {
             w.beat("window", Row::Window { app: "a.exe", title: "x", exe: "" }, t, 5000.0, None).unwrap();
         }
-        assert_eq!(rows(&w), vec![(0.0, 6.0, "x".into())]);
+        assert_eq!(rows(&mut w), vec![(0.0, 6.0, "x".into())]);
     }
 
     #[test]
@@ -571,7 +628,7 @@ mod tests {
         w.beat("window", Row::Window { app: "a.exe", title: "x", exe: "" }, 0.0, 5000.0, None).unwrap();
         w.beat("window", Row::Window { app: "a.exe", title: "x", exe: "" }, 2000.0, 5000.0, None).unwrap();
         w.beat("window", Row::Window { app: "a.exe", title: "y", exe: "" }, 3000.0, 5000.0, None).unwrap();
-        assert_eq!(rows(&w), vec![(0.0, 3.0, "x".into()), (3000.0, 0.0, "y".into())]);
+        assert_eq!(rows(&mut w), vec![(0.0, 3.0, "x".into()), (3000.0, 0.0, "y".into())]);
     }
 
     #[test]
@@ -579,8 +636,8 @@ mod tests {
         let mut w = mem();
         w.beat("window", Row::Window { app: "a.exe", title: "x", exe: "" }, 0.0, 5000.0, None).unwrap();
         w.beat("window", Row::Window { app: "a.exe", title: "x", exe: "" }, 60_000.0, 5000.0, None).unwrap();
-        assert_eq!(rows(&w).len(), 2);
-        assert_eq!(rows(&w)[0].1, 0.0, "the tracker was off: no time is invented");
+        assert_eq!(rows(&mut w).len(), 2);
+        assert_eq!(rows(&mut w)[0].1, 0.0, "the tracker was off: no time is invented");
     }
 
     #[test]
@@ -590,6 +647,7 @@ mod tests {
         w.beat("afk", Row::Afk { afk: false, kind: "input" }, 100_000.0, f64::INFINITY, None).unwrap();
         // noticed at 220 s that input stopped at 100 s
         w.beat("afk", Row::Afk { afk: true, kind: "idle" }, 220_000.0, f64::INFINITY, Some(100_000.0)).unwrap();
+        w.flush().unwrap();
         let got: Vec<(f64, f64, i64)> = w
             .conn
             .prepare("SELECT ts, dur, afk FROM raw_afk ORDER BY ts")
@@ -664,11 +722,24 @@ mod tests {
     }
 
     #[test]
+    fn oldest_detail_is_found_through_its_own_index() {
+        let w = mem();
+        let plan: String = w
+            .conn
+            .query_row("EXPLAIN QUERY PLAN SELECT min(ts) FROM raw_window WHERE project IS NULL AND ts < 1", [], |r| r.get(3))
+            .unwrap();
+        assert!(plan.contains("raw_window_detail"), "{plan}");
+    }
+
+    #[test]
     fn input_counts_accumulate() {
         let mut w = mem();
-        w.add_input(5, 3, 1, 0, 2).unwrap();
-        w.add_input(5, 2, 0, 1, 0).unwrap();
+        w.add_input(5, 3, 1, 0, 2);
+        w.add_input(5, 2, 0, 1, 0);
+        w.flush().unwrap();
+        w.add_input(5, 1, 0, 0, 0);
+        w.flush().unwrap();
         let k: i64 = w.conn.query_row("SELECT keys FROM raw_input WHERE minute = 5", [], |r| r.get(0)).unwrap();
-        assert_eq!(k, 5);
+        assert_eq!(k, 6, "counts kept in memory add to what is already stored");
     }
 }

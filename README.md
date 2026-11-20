@@ -196,6 +196,7 @@ flowchart LR
 - **Raw events are never rewritten.** Projects, states and sessions are computed on top, so a new rule instantly re-sorts your whole history.
 - **One engine everywhere.** The same TypeScript code runs in the app window, the browser and the demo mode, and is covered by tests.
 - **Long periods stay light.** A year is computed month by month and reduced to daily totals, never held in memory as raw events.
+- **Quiet in the background.** In the tray Tempro reads nothing from disk and writes about 1 KB/s: growing records are kept in memory and saved every 15 seconds, the window stops polling while hidden, and Claude Code transcripts are read once, only from where the last read stopped.
 
 ## ✦ Origins
 

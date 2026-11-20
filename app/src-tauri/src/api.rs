@@ -34,7 +34,7 @@ pub fn call(state: &AppState, name: &str, args: Value) -> Result<Value, String> 
                 let conn = state.read.lock().unwrap();
                 db::read_events(&conn, from, to).map_err(err)?
             };
-            let agent = agents::spans(&agents::root(), from, to);
+            let agent = agents::spans(&agents::root(), from, to, &state.read);
             let mut v = serde_json::to_value(ev).map_err(|e| e.to_string())?;
             v["agent"] = serde_json::to_value(agent).map_err(|e| e.to_string())?;
             Ok(v)
@@ -131,30 +131,40 @@ pub fn call(state: &AppState, name: &str, args: Value) -> Result<Value, String> 
             Ok(Value::Array(db::journal(&state.read.lock().unwrap(), limit).map_err(err)?))
         }
         "status" => {
-            let counts = db::counts(&state.read.lock().unwrap()).map_err(err)?;
             let st = state.status.lock().unwrap();
-            let autostart = state.app.get().map(|a| {
-                use tauri_plugin_autostart::ManagerExt;
-                a.autolaunch().is_enabled().unwrap_or(false)
-            });
-            Ok(json!({
-                "counts": counts,
+            // polled every few seconds: only what is already in memory
+            let mut v = json!({
                 "extLastSeen": st.ext_last_seen,
                 "extBrowser": st.ext_browser,
                 "import": st.import,
                 "sensorsSince": st.sensors_since,
                 "lastSignal": st.last_signal,
                 "paused": state.paused.load(Ordering::Relaxed),
-                "autostart": autostart,
-                "dbPath": state.db_path.display().to_string(),
-                "encrypted": db::encrypted(),
-                "watchdog": crate::guard::watchdog_status(),
-                "crashes": crate::guard::recent_crashes(3),
-                "crashLog": crate::guard::crash_log().display().to_string(),
-                "awPath": crate::aw::default_db_path().display().to_string(),
-                "agentsPath": agents::root().display().to_string(),
                 "now": now_ms(),
-            }))
+            });
+            drop(st);
+            // the settings screen also wants what costs a disk read: row counts scan whole tables
+            if args["full"].as_bool() == Some(true) {
+                let autostart = state.app.get().map(|a| {
+                    use tauri_plugin_autostart::ManagerExt;
+                    a.autolaunch().is_enabled().unwrap_or(false)
+                });
+                let extra = json!({
+                    "counts": db::counts(&state.read.lock().unwrap()).map_err(err)?,
+                    "autostart": autostart,
+                    "dbPath": state.db_path.display().to_string(),
+                    "encrypted": db::encrypted(),
+                    "watchdog": crate::guard::watchdog_status(),
+                    "crashes": crate::guard::recent_crashes(3),
+                    "crashLog": crate::guard::crash_log().display().to_string(),
+                    "awPath": crate::aw::default_db_path().display().to_string(),
+                    "agentsPath": agents::root().display().to_string(),
+                });
+                if let (Some(v), Value::Object(extra)) = (v.as_object_mut(), extra) {
+                    v.extend(extra);
+                }
+            }
+            Ok(v)
         }
         "pause_set" => {
             state.paused.store(args["paused"].as_bool().unwrap_or(false), Ordering::Relaxed);

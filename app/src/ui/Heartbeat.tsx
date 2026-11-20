@@ -1,6 +1,7 @@
 import { isTauri } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { useQueryClient } from "@tanstack/react-query";
+import { getCurrentWindow } from "@tauri-apps/api/window";
+import { focusManager, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 
 export const TICK = "tempro:tick";
@@ -20,5 +21,14 @@ export function Heartbeat() {
       off.then((f) => f());
     };
   }, [qc]);
+  // a window hidden in the tray still looks visible to the page, so queries kept polling every
+  // few seconds; told by the backend instead, they poll only while the window is on screen
+  useEffect(() => {
+    if (!isTauri()) return;
+    const set = (shown: boolean) => focusManager.setFocused(shown);
+    getCurrentWindow().isVisible().then(set, () => {});
+    const offs = [listen("window-shown", () => set(true)), listen("window-hidden", () => set(false))];
+    return () => offs.forEach((off) => off.then((f) => f()));
+  }, []);
   return null;
 }

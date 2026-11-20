@@ -2,7 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Settings as Gear } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { call } from "../data/api";
-import { useSaveSettings, useSettings, useStatus, type Settings as S } from "../data/backend";
+import { useSaveSettings, useSettings, useStatus, useStatusFull, type Settings as S } from "../data/backend";
 import { actions } from "../data/store";
 import { langSetting, locale, num, setLang, t, tj } from "../lib/i18n";
 import { clock, dayTitle } from "../lib/time";
@@ -64,7 +64,8 @@ function ago(ts: number | null | undefined, now: number) {
 export function Settings() {
   const { settings, loaded, available } = useSettings();
   const save = useSaveSettings();
-  const status = useStatus().data;
+  const live = useStatus().data;
+  const full = useStatusFull().data;
   const qc = useQueryClient();
   const [busy, setBusy] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
@@ -107,8 +108,9 @@ export function Settings() {
       </>
     );
   }
-  if (!loaded || !status) return <TopBar icon={<Gear size={14} strokeWidth={1.9} />} section={t("Настройки")} />;
+  if (!loaded || !live || !full) return <TopBar icon={<Gear size={14} strokeWidth={1.9} />} section={t("Настройки")} />;
 
+  const status = { ...full, ...live };
   const now = status.now;
   const c = status.counts;
   const extAlive = now - status.extLastSeen < 90_000;

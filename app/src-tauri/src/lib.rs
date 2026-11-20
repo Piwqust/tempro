@@ -48,6 +48,8 @@ fn show_main(app: &AppHandle) {
         let _ = w.unminimize();
         let _ = w.show();
         let _ = w.set_focus();
+        // the page stops its polling while hidden and picks it up again here
+        let _ = w.emit("window-shown", ());
     }
 }
 
@@ -232,6 +234,11 @@ pub fn run() {
                         let _ = pause_item.set_checked(on);
                     }
                     "quit" => {
+                        // what the writer still holds in memory goes to disk first
+                        let (done, wait) = mpsc::channel();
+                        if st.tx.send(Msg::Flush(done)).is_ok() {
+                            let _ = wait.recv_timeout(std::time::Duration::from_secs(3));
+                        }
                         guard::mark_stopped();
                         app.exit(0)
                     }
@@ -253,6 +260,7 @@ pub fn run() {
                 // a hidden window opens locked again
                 lock::relock();
                 let _ = window.emit("locked", ());
+                let _ = window.emit("window-hidden", ());
             }
         })
         .invoke_handler(tauri::generate_handler![call])
